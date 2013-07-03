@@ -1,4 +1,4 @@
-# Class Space Checker
+# Jar Class Space Checker
 
 <img src="https://raw.github.com/gunoodaddy/ClassSpaceChecker/master/ClassSpaceCheckerIntro.png"/>
 
