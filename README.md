@@ -1,4 +1,4 @@
-# Shared Painter
+# Class Space Checker
 
 <img src="https://raw.github.com/gunoodaddy/ClassSpaceChecker/master/ClassSpaceCheckerIntro.png"/>
 
@@ -6,7 +6,6 @@ This program let you get easily the file sizes or the counts about class or pack
 
 The jar file supports obfuscated file by proguard.
 
-When you double-click a item in result table, you can decompile the class and show the result immediately.
+When you double-click a item in result table, you can decompile the class and show the result immediately by using jd-gui program.
 
 Special Thanks to http://java.decompiler.free.fr/?q=jdgui
-
