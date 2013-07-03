@@ -468,7 +468,9 @@ void ClassSpaceChecker::openClassFile(const QString jarPath, const ClassFileCont
 		uri = QDir::toNativeSeparators(uri);
 
 		std::wstring uriW = uri.toStdWString().c_str();
-		std::wstring paramW = output.toStdWString().c_str();
+		std::wstring paramW = L"\"";
+		paramW += output.toStdWString().c_str();
+		paramW += L"\"";
 
 		if(prevJdProcessId_ != 0)
 		{
