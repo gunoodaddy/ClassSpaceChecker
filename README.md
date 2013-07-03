@@ -14,6 +14,7 @@ When you double-click a item in result table, you can decompile the class and sh
   *You should install the Qt SDK for reducing your stamina waste..*
 * Visual Studio 2008 (not express version)
 * Qt Visual Studio Add-in (http://releases.qt-project.org/vsaddin/qt-vs-addin-1.1.11-opensource.exe)
+* jd-gui (You should make "jd" directory on where ClassSpaceChecker.exe is located and copy jd-gui.exe, jd-gui.cfg files to it)
 
 ## Special Thanks
 Special Thanks to http://java.decompiler.free.fr/?q=jdgui
