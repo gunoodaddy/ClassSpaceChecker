@@ -7,8 +7,6 @@ ClassSpaceChecker::ClassSpaceChecker(QWidget *parent, Qt::WFlags flags)
 	: QMainWindow(parent, flags), prevJdProcessId_(0)
 {
 	ui.setupUi(this);
-	ui.tableWidgetResult->setColumnCount(3);
-	ui.tableWidgetResult->setHorizontalHeaderLabels(QString("Name;Size;Crypt Name").split(";"));  
 	ui.tableWidgetResult->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
 
 	ui.lineEdit_JarFile->setDragEnabled(true);
@@ -20,7 +18,7 @@ ClassSpaceChecker::ClassSpaceChecker(QWidget *parent, Qt::WFlags flags)
 	ui.lineEdit_JarFile->setText(getSetting("jarPath").toString());
 	ui.lineEdit_MapFile->setText(getSetting("mapPath").toString());
 	ui.lineEdit_Search->setText(getSetting("searchText").toString());
-	ui.checkBox_ByCryptName->setChecked(getSetting("ByCryptName").toBool());
+	ui.checkBox_ByUncryptName->setChecked(getSetting("ByUncryptName").toBool());
 }
 
 ClassSpaceChecker::~ClassSpaceChecker()
@@ -135,7 +133,10 @@ void ClassSpaceChecker::onCheckButtonClicked()
 
 	removeAll();
 
+	currentMapPath_ = mapPath;
 	currentJarPath_ = jarPath;
+
+	changeResultHeader();
 
 	if(mapPath.isEmpty() == false)
 	{
@@ -146,7 +147,25 @@ void ClassSpaceChecker::onCheckButtonClicked()
 	if(loadJarFile(jarPath))
 	{
 		collectClassFile();
-		searchClass(ui.checkBox_ByCryptName->isChecked(), searchText);
+		searchClass(ui.checkBox_ByUncryptName->isChecked(), searchText);
+	}
+}
+
+void ClassSpaceChecker::changeResultHeader()
+{
+	if(currentMapPath_.isEmpty() == false)
+	{
+		ui.checkBox_ByUncryptName->setChecked(true);
+		ui.checkBox_ByUncryptName->setEnabled(true);
+		ui.tableWidgetResult->setColumnCount(3);
+		ui.tableWidgetResult->setHorizontalHeaderLabels(QString("Class Name;File Size;Uncrypted Name").split(";"));  
+	}
+	else
+	{
+		ui.checkBox_ByUncryptName->setChecked(false);
+		ui.checkBox_ByUncryptName->setEnabled(false);
+		ui.tableWidgetResult->setColumnCount(2);
+		ui.tableWidgetResult->setHorizontalHeaderLabels(QString("Class Name;File Size;").split(";"));  
 	}
 }
 
@@ -199,8 +218,6 @@ bool ClassSpaceChecker::loadJarFile(const QString & jarPath)
 			ctx->className.replace("/", ".");
 			ctx->className.remove(".class");
 			
-			ctx->originalName = ctx->className;
-
 			ctx->fullClassNameForKey = fileName;
 			ctx->fullClassNameForKey.remove(".class");
 			ctx->fullClassNameForKey.replace("/", "_");
@@ -273,7 +290,7 @@ void ClassSpaceChecker::collectClassFile()
 	}
 }
 
-void ClassSpaceChecker::searchClass(bool useCryptName, const QString & searchText) 
+void ClassSpaceChecker::searchClass(bool useUncryptName, const QString & searchText) 
 {
 	ui.tableWidgetResult->clearContents();
 	ui.tableWidgetResult->setRowCount(0);
@@ -287,21 +304,21 @@ void ClassSpaceChecker::searchClass(bool useCryptName, const QString & searchTex
 		const ClassFileContext* ctx = *it;
 		if(searchText.isEmpty() == false)
 		{
-			if(useCryptName)
+			if(useUncryptName)
 			{
-				if(ctx->className.indexOf(searchText, 0, Qt::CaseInsensitive) < 0)
+				if(ctx->originalName.indexOf(searchText, 0, Qt::CaseInsensitive) < 0)
 					continue;
 			}
 			else
 			{
-				if(ctx->originalName.indexOf(searchText, 0, Qt::CaseInsensitive) < 0)
+				if(ctx->className.indexOf(searchText, 0, Qt::CaseInsensitive) < 0)
 					continue;
 			}
 		}
 
 		QString space = QString::number(ctx->fileSize);
 
-		QTableWidgetItem *itemOriginal = new QTableWidgetItem(ctx->originalName);
+		QTableWidgetItem *itemOriginal = new QTableWidgetItem(ctx->className);
 		itemOriginal->setFlags(itemOriginal->flags() & ~Qt::ItemIsEditable);
 		itemOriginal->setData(Qt::UserRole, qVariantFromValue((void *)ctx));
 
@@ -309,13 +326,16 @@ void ClassSpaceChecker::searchClass(bool useCryptName, const QString & searchTex
 		itemSize->setData(Qt::DisplayRole, ctx->fileSize);
 		itemSize->setFlags(itemSize->flags() & ~Qt::ItemIsEditable);
 
-		QTableWidgetItem *itemCrypt = new QTableWidgetItem(ctx->className);
-		itemCrypt->setFlags(itemCrypt->flags() & ~Qt::ItemIsEditable);
-
 		ui.tableWidgetResult->insertRow(rowCount);
 		ui.tableWidgetResult->setItem(rowCount, 0, itemOriginal);
 		ui.tableWidgetResult->setItem(rowCount, 1, itemSize);
-		ui.tableWidgetResult->setItem(rowCount, 2, itemCrypt);
+
+		if(ui.tableWidgetResult->columnCount() > 2)
+		{
+			QTableWidgetItem *itemCrypt = new QTableWidgetItem(ctx->originalName);
+			itemCrypt->setFlags(itemCrypt->flags() & ~Qt::ItemIsEditable);
+			ui.tableWidgetResult->setItem(rowCount, 2, itemCrypt);
+		}
 
 		rowCount++;
 
@@ -341,7 +361,7 @@ void ClassSpaceChecker::onChangedSearchText(QString text)
 {
 	setSetting("searchText", text);
 
-	searchClass(ui.checkBox_ByCryptName->isChecked(), text);
+	searchClass(ui.checkBox_ByUncryptName->isChecked(), text);
 }
 
 
@@ -368,11 +388,11 @@ void ClassSpaceChecker::onClickedMapFile()
 	}
 }
 
-void ClassSpaceChecker::onClickedByCryptName()
+void ClassSpaceChecker::onClickedByUncryptName()
 {
-	setSetting("ByCryptName", ui.checkBox_ByCryptName->isChecked());
+	setSetting("ByUncryptName", ui.checkBox_ByUncryptName->isChecked());
 
-	searchClass(ui.checkBox_ByCryptName->isChecked(), ui.lineEdit_Search->text());
+	searchClass(ui.checkBox_ByUncryptName->isChecked(), ui.lineEdit_Search->text());
 }
 
 void ClassSpaceChecker::onResultItemSelectionChanged()

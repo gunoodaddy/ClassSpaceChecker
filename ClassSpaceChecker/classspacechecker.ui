@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>437</width>
-    <height>432</height>
+    <width>548</width>
+    <height>511</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -87,16 +87,16 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QCheckBox" name="checkBox_ByCryptName">
-          <property name="text">
-           <string>By Crypt Name</string>
+         <widget class="QLineEdit" name="lineEdit_Search">
+          <property name="placeholderText">
+           <string>Search Class Name</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_Search">
-          <property name="placeholderText">
-           <string>Search Class Name</string>
+         <widget class="QCheckBox" name="checkBox_ByUncryptName">
+          <property name="text">
+           <string>By Uncrypt Name</string>
           </property>
          </widget>
         </item>
@@ -225,10 +225,10 @@
    </hints>
   </connection>
   <connection>
-   <sender>checkBox_ByCryptName</sender>
+   <sender>checkBox_ByUncryptName</sender>
    <signal>clicked()</signal>
    <receiver>ClassSpaceCheckerClass</receiver>
-   <slot>onClickedByCryptName()</slot>
+   <slot>onClickedByUncryptName()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>65</x>
@@ -263,7 +263,7 @@
   <slot>onClickedJarFile()</slot>
   <slot>onClickedMapFile()</slot>
   <slot>onResultItemSelectionChanged()</slot>
-  <slot>onClickedByCryptName()</slot>
+  <slot>onClickedByUncryptName()</slot>
   <slot>onResultCellDoubleClicked(int,int)</slot>
  </slots>
 </ui>

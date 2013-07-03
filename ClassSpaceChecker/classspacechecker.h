@@ -29,17 +29,18 @@ public slots:
 	void onClickedJarFile();
 	void onClickedMapFile();
 	void onCheckButtonClicked();
-	void onClickedByCryptName();
+	void onClickedByUncryptName();
 	void onChangedSearchText(QString text);
 	void onResultItemSelectionChanged();
 	void onResultCellDoubleClicked(int row, int column);
 	bool eventFilter(QObject *object, QEvent *evt);
 
 private:
+	void changeResultHeader();
 	bool loadJarFile(const QString & jarPath);
 	bool loadMapFile(const QString & mapPath);
 	void collectClassFile();
-	void searchClass(bool useCryptName, const QString & searchText);
+	void searchClass(bool useUncryptName, const QString & searchText);
 	void removeAll();
 	void openClassFile(const QString jarPath, const ClassFileContext *ctx);
 
@@ -79,6 +80,7 @@ private:
 
 private:
 	QString currentJarPath_;
+	QString currentMapPath_;
 	QList<ClassFileContext*> classList_;
 	QMap<QString, QString> proguardMap_VK_;
 	QString prevTotalResultStr_;

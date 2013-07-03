@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'classspacechecker.ui'
 **
-** Created: Wed Jul 3 23:34:15 2013
+** Created: Thu Jul 4 00:37:14 2013
 **      by: Qt User Interface Compiler version 4.8.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -43,8 +43,8 @@ public:
     QHBoxLayout *horizontalLayout_4;
     QPushButton *pushButtonStart;
     QHBoxLayout *horizontalLayout_3;
-    QCheckBox *checkBox_ByCryptName;
     QLineEdit *lineEdit_Search;
+    QCheckBox *checkBox_ByUncryptName;
     QGroupBox *groupBox;
     QVBoxLayout *verticalLayout;
     QTableWidget *tableWidgetResult;
@@ -54,7 +54,7 @@ public:
     {
         if (ClassSpaceCheckerClass->objectName().isEmpty())
             ClassSpaceCheckerClass->setObjectName(QString::fromUtf8("ClassSpaceCheckerClass"));
-        ClassSpaceCheckerClass->resize(437, 432);
+        ClassSpaceCheckerClass->resize(548, 511);
         QIcon icon;
         icon.addFile(QString::fromUtf8(":/ClassSpaceChecker/Resources/ClassSpaceChecker.ico"), QSize(), QIcon::Normal, QIcon::Off);
         ClassSpaceCheckerClass->setWindowIcon(icon);
@@ -116,15 +116,15 @@ public:
         horizontalLayout_3 = new QHBoxLayout();
         horizontalLayout_3->setSpacing(6);
         horizontalLayout_3->setObjectName(QString::fromUtf8("horizontalLayout_3"));
-        checkBox_ByCryptName = new QCheckBox(centralWidget);
-        checkBox_ByCryptName->setObjectName(QString::fromUtf8("checkBox_ByCryptName"));
-
-        horizontalLayout_3->addWidget(checkBox_ByCryptName);
-
         lineEdit_Search = new QLineEdit(centralWidget);
         lineEdit_Search->setObjectName(QString::fromUtf8("lineEdit_Search"));
 
         horizontalLayout_3->addWidget(lineEdit_Search);
+
+        checkBox_ByUncryptName = new QCheckBox(centralWidget);
+        checkBox_ByUncryptName->setObjectName(QString::fromUtf8("checkBox_ByUncryptName"));
+
+        horizontalLayout_3->addWidget(checkBox_ByUncryptName);
 
 
         verticalLayout_2->addLayout(horizontalLayout_3);
@@ -164,7 +164,7 @@ public:
         QObject::connect(toolButton_JarFile, SIGNAL(clicked()), ClassSpaceCheckerClass, SLOT(onClickedJarFile()));
         QObject::connect(toolButton_MapFile, SIGNAL(clicked()), ClassSpaceCheckerClass, SLOT(onClickedMapFile()));
         QObject::connect(tableWidgetResult, SIGNAL(itemSelectionChanged()), ClassSpaceCheckerClass, SLOT(onResultItemSelectionChanged()));
-        QObject::connect(checkBox_ByCryptName, SIGNAL(clicked()), ClassSpaceCheckerClass, SLOT(onClickedByCryptName()));
+        QObject::connect(checkBox_ByUncryptName, SIGNAL(clicked()), ClassSpaceCheckerClass, SLOT(onClickedByUncryptName()));
         QObject::connect(tableWidgetResult, SIGNAL(cellDoubleClicked(int,int)), ClassSpaceCheckerClass, SLOT(onResultCellDoubleClicked(int,int)));
 
         QMetaObject::connectSlotsByName(ClassSpaceCheckerClass);
@@ -178,8 +178,8 @@ public:
         lineEdit_MapFile->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Proguard Map File", 0, QApplication::UnicodeUTF8));
         toolButton_MapFile->setText(QApplication::translate("ClassSpaceCheckerClass", "...", 0, QApplication::UnicodeUTF8));
         pushButtonStart->setText(QApplication::translate("ClassSpaceCheckerClass", "Analysis", 0, QApplication::UnicodeUTF8));
-        checkBox_ByCryptName->setText(QApplication::translate("ClassSpaceCheckerClass", "By Crypt Name", 0, QApplication::UnicodeUTF8));
         lineEdit_Search->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Search Class Name", 0, QApplication::UnicodeUTF8));
+        checkBox_ByUncryptName->setText(QApplication::translate("ClassSpaceCheckerClass", "By Uncrypt Name", 0, QApplication::UnicodeUTF8));
         groupBox->setTitle(QApplication::translate("ClassSpaceCheckerClass", "Result", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
