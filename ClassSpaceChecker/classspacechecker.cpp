@@ -375,7 +375,7 @@ void ClassSpaceChecker::onChangedSearchText(QString text)
 
 void ClassSpaceChecker::onClickedJarFile()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Jar File"), "", tr("Jar Files (*.jar *.zip)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Jar File"), ui.lineEdit_JarFile->text(), tr("Jar Files (*.jar *.zip)"));
  
 	if(fileName.isEmpty() == false)
 	{
@@ -387,7 +387,7 @@ void ClassSpaceChecker::onClickedJarFile()
 
 void ClassSpaceChecker::onClickedMapFile()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Proguard Map File"), "", tr("Map Files (*.txt)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Proguard Map File"), ui.lineEdit_MapFile->text(), tr("Map Files (*.txt)"));
  
 	if(fileName.isEmpty() == false)
 	{
