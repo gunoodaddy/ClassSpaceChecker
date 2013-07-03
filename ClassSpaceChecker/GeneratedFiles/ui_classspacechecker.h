@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'classspacechecker.ui'
 **
-** Created: Thu Jul 4 00:37:14 2013
+** Created: Thu Jul 4 01:15:47 2013
 **      by: Qt User Interface Compiler version 4.8.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -178,7 +178,7 @@ public:
         lineEdit_MapFile->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Proguard Map File", 0, QApplication::UnicodeUTF8));
         toolButton_MapFile->setText(QApplication::translate("ClassSpaceCheckerClass", "...", 0, QApplication::UnicodeUTF8));
         pushButtonStart->setText(QApplication::translate("ClassSpaceCheckerClass", "Analysis", 0, QApplication::UnicodeUTF8));
-        lineEdit_Search->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Search Class Name", 0, QApplication::UnicodeUTF8));
+        lineEdit_Search->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Search Class Name (Regular Expression supported)", 0, QApplication::UnicodeUTF8));
         checkBox_ByUncryptName->setText(QApplication::translate("ClassSpaceCheckerClass", "By Uncrypt Name", 0, QApplication::UnicodeUTF8));
         groupBox->setTitle(QApplication::translate("ClassSpaceCheckerClass", "Result", 0, QApplication::UnicodeUTF8));
     } // retranslateUi

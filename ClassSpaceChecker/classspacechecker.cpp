@@ -18,7 +18,10 @@ ClassSpaceChecker::ClassSpaceChecker(QWidget *parent, Qt::WFlags flags)
 	ui.lineEdit_JarFile->setText(getSetting("jarPath").toString());
 	ui.lineEdit_MapFile->setText(getSetting("mapPath").toString());
 	ui.lineEdit_Search->setText(getSetting("searchText").toString());
-	ui.checkBox_ByUncryptName->setChecked(getSetting("ByUncryptName").toBool());
+
+	ui.lineEdit_Result->setText("Press Analysis button first.");
+
+	updateWindowTitle();
 }
 
 ClassSpaceChecker::~ClassSpaceChecker()
@@ -217,6 +220,8 @@ bool ClassSpaceChecker::loadJarFile(const QString & jarPath)
 
 			ctx->className.replace("/", ".");
 			ctx->className.remove(".class");
+
+			ctx->originalName = ctx->className;
 			
 			ctx->fullClassNameForKey = fileName;
 			ctx->fullClassNameForKey.remove(".class");
@@ -292,6 +297,9 @@ void ClassSpaceChecker::collectClassFile()
 
 void ClassSpaceChecker::searchClass(bool useUncryptName, const QString & searchText) 
 {
+	if(classList_.size() <= 0)
+		return;
+
 	ui.tableWidgetResult->clearContents();
 	ui.tableWidgetResult->setRowCount(0);
 	ui.tableWidgetResult->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
@@ -306,12 +314,12 @@ void ClassSpaceChecker::searchClass(bool useUncryptName, const QString & searchT
 		{
 			if(useUncryptName)
 			{
-				if(ctx->originalName.indexOf(searchText, 0, Qt::CaseInsensitive) < 0)
+				if(ctx->originalName.contains(QRegExp(searchText, Qt::CaseInsensitive)) == false)
 					continue;
 			}
 			else
 			{
-				if(ctx->className.indexOf(searchText, 0, Qt::CaseInsensitive) < 0)
+				if(ctx->className.contains(QRegExp(searchText, Qt::CaseInsensitive)) == false)
 					continue;
 			}
 		}
@@ -346,7 +354,7 @@ void ClassSpaceChecker::searchClass(bool useUncryptName, const QString & searchT
 	resultStr += "Total : ";
 	resultStr += QString::number(rowCount);
 	resultStr += " class found, ";
-	resultStr += QString::number(totalSize);
+	resultStr += numberDot(QString::number(totalSize));
 	resultStr += " bytes";
 
 	ui.lineEdit_Result->setText(resultStr);
@@ -390,8 +398,6 @@ void ClassSpaceChecker::onClickedMapFile()
 
 void ClassSpaceChecker::onClickedByUncryptName()
 {
-	setSetting("ByUncryptName", ui.checkBox_ByUncryptName->isChecked());
-
 	searchClass(ui.checkBox_ByUncryptName->isChecked(), ui.lineEdit_Search->text());
 }
 
@@ -428,8 +434,8 @@ void ClassSpaceChecker::onResultItemSelectionChanged()
 	QString resultStr;
 	resultStr += "Total : ";
 	resultStr += QString::number(classCount);
-	resultStr += " class found, ";
-	resultStr += QString::number(totalSize);
+	resultStr += " class selected, ";
+	resultStr += numberDot(QString::number(totalSize));
 	resultStr += " bytes";
 
 	ui.lineEdit_Result->setText(resultStr);

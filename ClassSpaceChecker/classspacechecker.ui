@@ -89,7 +89,7 @@
         <item>
          <widget class="QLineEdit" name="lineEdit_Search">
           <property name="placeholderText">
-           <string>Search Class Name</string>
+           <string>Search Class Name (Regular Expression supported)</string>
           </property>
          </widget>
         </item>

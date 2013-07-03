@@ -5,6 +5,11 @@
 #include <QtGui>
 #include "ui_classspacechecker.h"
 
+#define VERSION_TEXT	"1.0.0"
+
+#define AUTHOR_TEXT		"gunoodaddy"
+#define PROGRAM_TEXT	"Jar Class Space Checker"
+
 
 class ClassFileContext 
 {
@@ -44,6 +49,18 @@ private:
 	void removeAll();
 	void openClassFile(const QString jarPath, const ClassFileContext *ctx);
 
+	void updateWindowTitle( void )
+	{
+		// Title
+		QString newTitle = PROGRAM_TEXT;
+		newTitle += " Ver ";
+		newTitle += VERSION_TEXT;
+		newTitle += " by ";
+		newTitle += AUTHOR_TEXT;
+
+		setWindowTitle( newTitle );
+	}
+
 	QVariant getSetting(const QString &key)
 	{
 		QString iniFile = qApp->applicationDirPath() + QDir::separator() + "setting.ini";
@@ -74,6 +91,23 @@ private:
 		if ( !dir.exists() )
 			dir.mkpath( res );
 		return QDir::toNativeSeparators(res);
+	}
+
+	QString numberDot(const QString & src)
+	{
+		QString number = src;
+
+		int i = number.lastIndexOf('.');
+		if(i < 0)
+			i = number.length();
+
+		i -= 3;
+		while(i > 0)
+		{
+			number.insert(i, ',');
+			i -= 3;
+		}
+		return number;
 	}
 private:
 	Ui::ClassSpaceCheckerClass ui;
