@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Resource object code
 **
-** Created: Wed Jul 3 20:06:13 2013
+** Created: Wed Jul 3 23:34:15 2013
 **      by: The Resource Compiler for Qt version 4.8.2
 **
 ** WARNING! All changes made in this file will be lost!
@@ -10,7 +10,7 @@
 #include <QtCore/qglobal.h>
 
 static const unsigned char qt_resource_data[] = {
-  // C:/work/ClassSpaceChecker/ClassSpaceChecker/Resources/ClassSpaceChecker.ico
+  // D:/!nhn work backup/ClassSpaceChecker/ClassSpaceChecker/Resources/ClassSpaceChecker.ico
   0x0,0x6,0x98,0x7e,
   0x0,
   0x0,0x1,0x0,0x9,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20,0x0,0x28,0x20,0x4,
