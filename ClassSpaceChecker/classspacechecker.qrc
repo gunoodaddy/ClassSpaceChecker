@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/ClassSpaceChecker">
+        <file>Resources/ClassSpaceChecker.ico</file>
+    </qresource>
+</RCC>

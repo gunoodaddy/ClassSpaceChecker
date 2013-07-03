@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ClassSpaceCheckerClass</class>
+ <widget class="QMainWindow" name="ClassSpaceCheckerClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>437</width>
+    <height>432</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Jar Class Space Checker by gunoodaddy</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="classspacechecker.qrc">
+    <normaloff>:/ClassSpaceChecker/Resources/ClassSpaceChecker.ico</normaloff>:/ClassSpaceChecker/Resources/ClassSpaceChecker.ico</iconset>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLineEdit" name="lineEdit_JarFile">
+          <property name="placeholderText">
+           <string>Jar File</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_JarFile">
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLineEdit" name="lineEdit_MapFile">
+          <property name="placeholderText">
+           <string>Proguard Map File</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_MapFile">
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QPushButton" name="pushButtonStart">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Analysis</string>
+          </property>
+          <property name="icon">
+           <iconset resource="classspacechecker.qrc">
+            <normaloff>:/ClassSpaceChecker/Resources/ClassSpaceChecker.ico</normaloff>:/ClassSpaceChecker/Resources/ClassSpaceChecker.ico</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>32</width>
+            <height>32</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QCheckBox" name="checkBox_ByCryptName">
+          <property name="text">
+           <string>By Crypt Name</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_Search">
+          <property name="placeholderText">
+           <string>Search Class Name</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Result</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QTableWidget" name="tableWidgetResult">
+           <property name="selectionMode">
+            <enum>QAbstractItemView::ExtendedSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <property name="sortingEnabled">
+            <bool>true</bool>
+           </property>
+           <property name="columnCount">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_Result">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="classspacechecker.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>pushButtonStart</sender>
+   <signal>clicked()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onCheckButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>175</x>
+     <y>91</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>181</x>
+     <y>148</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_Search</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onChangedSearchText(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>214</x>
+     <y>76</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>181</x>
+     <y>162</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButton_JarFile</sender>
+   <signal>clicked()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onClickedJarFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>412</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>215</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButton_MapFile</sender>
+   <signal>clicked()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onClickedMapFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>412</x>
+     <y>48</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>215</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tableWidgetResult</sender>
+   <signal>itemSelectionChanged()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onResultItemSelectionChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>218</x>
+     <y>274</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>215</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_ByCryptName</sender>
+   <signal>clicked()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onClickedByCryptName()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>65</x>
+     <y>124</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>215</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tableWidgetResult</sender>
+   <signal>cellDoubleClicked(int,int)</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onResultCellDoubleClicked(int,int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>218</x>
+     <y>274</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>215</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>onCheckButtonClicked()</slot>
+  <slot>onChangedSearchText(QString)</slot>
+  <slot>onClickedJarFile()</slot>
+  <slot>onClickedMapFile()</slot>
+  <slot>onResultItemSelectionChanged()</slot>
+  <slot>onClickedByCryptName()</slot>
+  <slot>onResultCellDoubleClicked(int,int)</slot>
+ </slots>
+</ui>
