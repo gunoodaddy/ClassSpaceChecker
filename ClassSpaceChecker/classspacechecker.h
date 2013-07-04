@@ -31,6 +31,7 @@ public:
 	~ClassSpaceChecker();
 
 public slots:
+	void onClickedExportCSV();
 	void onClickedJarFile();
 	void onClickedMapFile();
 	void onCheckButtonClicked();
@@ -48,6 +49,7 @@ private:
 	void searchClass(bool useUncryptName, const QString & searchText);
 	void removeAll();
 	void openClassFile(const QString jarPath, const ClassFileContext *ctx);
+	void writeToCSVFile(const QString & outputPath);
 
 	void updateWindowTitle( void )
 	{

@@ -22,6 +22,12 @@ ClassSpaceChecker::ClassSpaceChecker(QWidget *parent, Qt::WFlags flags)
 	ui.lineEdit_Result->setText("Press Analysis button first.");
 
 	updateWindowTitle();
+
+	if(ui.lineEdit_JarFile->text().isEmpty() && ui.lineEdit_MapFile->text().isEmpty())
+	{
+		// To show placeholder text at initial launch time
+		ui.pushButtonStart->setFocus();
+	}
 }
 
 ClassSpaceChecker::~ClassSpaceChecker()
@@ -365,6 +371,52 @@ void ClassSpaceChecker::searchClass(bool useUncryptName, const QString & searchT
 	prevTotalResultStr_ = resultStr;
 }
 
+void ClassSpaceChecker::writeToCSVFile(const QString & outputPath)
+{
+	QFile outputFile(outputPath);
+	if (!outputFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+	{
+		QMessageBox::warning(this, "", tr("Failed to create csv file."));
+		ui.lineEdit_MapFile->setFocus();
+		return;
+	}
+
+	for(int i = 0; i < ui.tableWidgetResult->columnCount(); i++) 
+	{
+		if(i != 0)
+		{
+			outputFile.write(",");
+		}
+
+		QTableWidgetItem *header = ui.tableWidgetResult->horizontalHeaderItem(i);
+		outputFile.write("\"");
+		outputFile.write(header->text().toStdString().c_str());
+		outputFile.write("\"");
+	}
+	outputFile.write("\n");
+
+	for(int i = 0; i < ui.tableWidgetResult->rowCount(); i++)
+	{
+		for(int j = 0; j < ui.tableWidgetResult->columnCount(); j++)
+		{
+			if(j != 0)
+			{
+				outputFile.write(",");
+			}
+
+			QTableWidgetItem *item = ui.tableWidgetResult->item(i, j);
+
+			outputFile.write("\"");
+			outputFile.write(item->text().toStdString().c_str());
+			outputFile.write("\"");
+		}
+		outputFile.write("\n");
+	}
+
+	outputFile.flush();
+	outputFile.close();
+}
+
 void ClassSpaceChecker::onChangedSearchText(QString text)
 {
 	setSetting("searchText", text);
@@ -394,6 +446,13 @@ void ClassSpaceChecker::onClickedMapFile()
 		ui.lineEdit_MapFile->setText(fileName);
 		ui.lineEdit_MapFile->setFocus();
 	}
+}
+
+void ClassSpaceChecker::onClickedExportCSV()
+{
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Export to CSV File"), tr(""), tr("CSV Files (*.csv)"));
+ 
+	writeToCSVFile(fileName);
 }
 
 void ClassSpaceChecker::onClickedByUncryptName()

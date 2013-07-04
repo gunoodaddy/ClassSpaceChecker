@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'classspacechecker.ui'
 **
-** Created: Thu Jul 4 01:15:47 2013
+** Created: Thu Jul 4 10:08:22 2013
 **      by: Qt User Interface Compiler version 4.8.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -48,7 +48,9 @@ public:
     QGroupBox *groupBox;
     QVBoxLayout *verticalLayout;
     QTableWidget *tableWidgetResult;
+    QHBoxLayout *horizontalLayout_5;
     QLineEdit *lineEdit_Result;
+    QPushButton *pushButtonExportCSV;
 
     void setupUi(QMainWindow *ClassSpaceCheckerClass)
     {
@@ -144,11 +146,23 @@ public:
 
         verticalLayout->addWidget(tableWidgetResult);
 
+        horizontalLayout_5 = new QHBoxLayout();
+        horizontalLayout_5->setSpacing(6);
+        horizontalLayout_5->setObjectName(QString::fromUtf8("horizontalLayout_5"));
         lineEdit_Result = new QLineEdit(groupBox);
         lineEdit_Result->setObjectName(QString::fromUtf8("lineEdit_Result"));
         lineEdit_Result->setReadOnly(true);
 
-        verticalLayout->addWidget(lineEdit_Result);
+        horizontalLayout_5->addWidget(lineEdit_Result);
+
+        pushButtonExportCSV = new QPushButton(groupBox);
+        pushButtonExportCSV->setObjectName(QString::fromUtf8("pushButtonExportCSV"));
+        pushButtonExportCSV->setMinimumSize(QSize(100, 0));
+
+        horizontalLayout_5->addWidget(pushButtonExportCSV);
+
+
+        verticalLayout->addLayout(horizontalLayout_5);
 
 
         verticalLayout_2->addWidget(groupBox);
@@ -166,6 +180,7 @@ public:
         QObject::connect(tableWidgetResult, SIGNAL(itemSelectionChanged()), ClassSpaceCheckerClass, SLOT(onResultItemSelectionChanged()));
         QObject::connect(checkBox_ByUncryptName, SIGNAL(clicked()), ClassSpaceCheckerClass, SLOT(onClickedByUncryptName()));
         QObject::connect(tableWidgetResult, SIGNAL(cellDoubleClicked(int,int)), ClassSpaceCheckerClass, SLOT(onResultCellDoubleClicked(int,int)));
+        QObject::connect(pushButtonExportCSV, SIGNAL(clicked()), ClassSpaceCheckerClass, SLOT(onClickedExportCSV()));
 
         QMetaObject::connectSlotsByName(ClassSpaceCheckerClass);
     } // setupUi
@@ -173,14 +188,15 @@ public:
     void retranslateUi(QMainWindow *ClassSpaceCheckerClass)
     {
         ClassSpaceCheckerClass->setWindowTitle(QApplication::translate("ClassSpaceCheckerClass", "Jar Class Space Checker by gunoodaddy", 0, QApplication::UnicodeUTF8));
-        lineEdit_JarFile->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Jar File", 0, QApplication::UnicodeUTF8));
+        lineEdit_JarFile->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Jar File (Drag&Drop supported)", 0, QApplication::UnicodeUTF8));
         toolButton_JarFile->setText(QApplication::translate("ClassSpaceCheckerClass", "...", 0, QApplication::UnicodeUTF8));
-        lineEdit_MapFile->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Proguard Map File", 0, QApplication::UnicodeUTF8));
+        lineEdit_MapFile->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Proguard Map File (Drag&Drop supported)", 0, QApplication::UnicodeUTF8));
         toolButton_MapFile->setText(QApplication::translate("ClassSpaceCheckerClass", "...", 0, QApplication::UnicodeUTF8));
         pushButtonStart->setText(QApplication::translate("ClassSpaceCheckerClass", "Analysis", 0, QApplication::UnicodeUTF8));
-        lineEdit_Search->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Search Class Name (Regular Expression supported)", 0, QApplication::UnicodeUTF8));
+        lineEdit_Search->setPlaceholderText(QApplication::translate("ClassSpaceCheckerClass", "Search Name (Regular Expression supported)", 0, QApplication::UnicodeUTF8));
         checkBox_ByUncryptName->setText(QApplication::translate("ClassSpaceCheckerClass", "By Uncrypt Name", 0, QApplication::UnicodeUTF8));
         groupBox->setTitle(QApplication::translate("ClassSpaceCheckerClass", "Result", 0, QApplication::UnicodeUTF8));
+        pushButtonExportCSV->setText(QApplication::translate("ClassSpaceCheckerClass", "Export to CSV", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };

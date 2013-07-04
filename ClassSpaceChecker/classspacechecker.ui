@@ -26,7 +26,7 @@
         <item>
          <widget class="QLineEdit" name="lineEdit_JarFile">
           <property name="placeholderText">
-           <string>Jar File</string>
+           <string>Jar File (Drag&amp;Drop supported)</string>
           </property>
          </widget>
         </item>
@@ -44,7 +44,7 @@
         <item>
          <widget class="QLineEdit" name="lineEdit_MapFile">
           <property name="placeholderText">
-           <string>Proguard Map File</string>
+           <string>Proguard Map File (Drag&amp;Drop supported)</string>
           </property>
          </widget>
         </item>
@@ -89,7 +89,7 @@
         <item>
          <widget class="QLineEdit" name="lineEdit_Search">
           <property name="placeholderText">
-           <string>Search Class Name (Regular Expression supported)</string>
+           <string>Search Name (Regular Expression supported)</string>
           </property>
          </widget>
         </item>
@@ -125,11 +125,28 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit_Result">
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QLineEdit" name="lineEdit_Result">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButtonExportCSV">
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Export to CSV</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </widget>
@@ -256,6 +273,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushButtonExportCSV</sender>
+   <signal>clicked()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onClickedExportCSV()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>483</x>
+     <y>478</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>273</x>
+     <y>255</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>onCheckButtonClicked()</slot>
@@ -265,5 +298,6 @@
   <slot>onResultItemSelectionChanged()</slot>
   <slot>onClickedByUncryptName()</slot>
   <slot>onResultCellDoubleClicked(int,int)</slot>
+  <slot>onClickedExportCSV()</slot>
  </slots>
 </ui>
