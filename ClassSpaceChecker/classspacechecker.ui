@@ -185,11 +185,11 @@
            </widget>
            <widget class="QWidget" name="tab_3">
             <attribute name="title">
-             <string>Unique Class Report</string>
+             <string>Inner Class Report</string>
             </attribute>
             <layout class="QHBoxLayout" name="horizontalLayout_8">
              <item>
-              <widget class="QTableWidget" name="tableWidgetUniqueClassReport">
+              <widget class="QTableWidget" name="tableWidgetInnerClassReport">
                <property name="selectionBehavior">
                 <enum>QAbstractItemView::SelectRows</enum>
                </property>
@@ -220,7 +220,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Export to CSV</string>
+              <string>Export this report to CSV</string>
              </property>
             </widget>
            </item>
@@ -417,10 +417,10 @@
    </hints>
   </connection>
   <connection>
-   <sender>tableWidgetUniqueClassReport</sender>
+   <sender>tableWidgetInnerClassReport</sender>
    <signal>itemSelectionChanged()</signal>
    <receiver>ClassSpaceCheckerClass</receiver>
-   <slot>onUniqueClassReportItemSelectionChanged()</slot>
+   <slot>onInnerClassReportItemSelectionChanged()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>272</x>
@@ -525,7 +525,7 @@
   <slot>onPackageReportCellDoubleClicked(int,int)</slot>
   <slot>onPackageReportItemSelectionChanged()</slot>
   <slot>onTabCurrentChanged(int)</slot>
-  <slot>onUniqueClassReportItemSelectionChanged()</slot>
+  <slot>onInnerClassReportItemSelectionChanged()</slot>
   <slot>onJarFileCurrentIndexChanged(int)</slot>
   <slot>onJarFileEditTextChanged(QString)</slot>
   <slot>onClickedDelete()</slot>

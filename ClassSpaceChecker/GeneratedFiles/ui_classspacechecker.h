@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'classspacechecker.ui'
 **
-** Created: Wed Jul 10 01:49:56 2013
+** Created: Wed Jul 10 02:18:14 2013
 **      by: Qt User Interface Compiler version 4.8.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -62,7 +62,7 @@ public:
     QTableWidget *tableWidgetPackageReport;
     QWidget *tab_3;
     QHBoxLayout *horizontalLayout_8;
-    QTableWidget *tableWidgetUniqueClassReport;
+    QTableWidget *tableWidgetInnerClassReport;
     QHBoxLayout *horizontalLayout_5;
     QLineEdit *lineEdit_Result;
     QPushButton *pushButtonExportCSV;
@@ -209,12 +209,12 @@ public:
         horizontalLayout_8->setSpacing(6);
         horizontalLayout_8->setContentsMargins(11, 11, 11, 11);
         horizontalLayout_8->setObjectName(QString::fromUtf8("horizontalLayout_8"));
-        tableWidgetUniqueClassReport = new QTableWidget(tab_3);
-        tableWidgetUniqueClassReport->setObjectName(QString::fromUtf8("tableWidgetUniqueClassReport"));
-        tableWidgetUniqueClassReport->setSelectionBehavior(QAbstractItemView::SelectRows);
-        tableWidgetUniqueClassReport->setSortingEnabled(true);
+        tableWidgetInnerClassReport = new QTableWidget(tab_3);
+        tableWidgetInnerClassReport->setObjectName(QString::fromUtf8("tableWidgetInnerClassReport"));
+        tableWidgetInnerClassReport->setSelectionBehavior(QAbstractItemView::SelectRows);
+        tableWidgetInnerClassReport->setSortingEnabled(true);
 
-        horizontalLayout_8->addWidget(tableWidgetUniqueClassReport);
+        horizontalLayout_8->addWidget(tableWidgetInnerClassReport);
 
         tabWidget->addTab(tab_3, QString());
 
@@ -261,7 +261,7 @@ public:
         QObject::connect(tableWidgetPackageReport, SIGNAL(cellDoubleClicked(int,int)), ClassSpaceCheckerClass, SLOT(onPackageReportCellDoubleClicked(int,int)));
         QObject::connect(tableWidgetPackageReport, SIGNAL(itemSelectionChanged()), ClassSpaceCheckerClass, SLOT(onPackageReportItemSelectionChanged()));
         QObject::connect(tabWidget, SIGNAL(currentChanged(int)), ClassSpaceCheckerClass, SLOT(onTabCurrentChanged(int)));
-        QObject::connect(tableWidgetUniqueClassReport, SIGNAL(itemSelectionChanged()), ClassSpaceCheckerClass, SLOT(onUniqueClassReportItemSelectionChanged()));
+        QObject::connect(tableWidgetInnerClassReport, SIGNAL(itemSelectionChanged()), ClassSpaceCheckerClass, SLOT(onInnerClassReportItemSelectionChanged()));
         QObject::connect(comboBox_JarFile, SIGNAL(currentIndexChanged(int)), ClassSpaceCheckerClass, SLOT(onJarFileCurrentIndexChanged(int)));
         QObject::connect(comboBox_JarFile, SIGNAL(editTextChanged(QString)), ClassSpaceCheckerClass, SLOT(onJarFileEditTextChanged(QString)));
         QObject::connect(pushButton_Delete, SIGNAL(clicked()), ClassSpaceCheckerClass, SLOT(onClickedDelete()));
@@ -289,8 +289,8 @@ public:
         checkBox_IgnoreInnerClass->setText(QApplication::translate("ClassSpaceCheckerClass", "Ignore Inner Class", 0, QApplication::UnicodeUTF8));
         tabWidget->setTabText(tabWidget->indexOf(tab), QApplication::translate("ClassSpaceCheckerClass", "File Report", 0, QApplication::UnicodeUTF8));
         tabWidget->setTabText(tabWidget->indexOf(tab_2), QApplication::translate("ClassSpaceCheckerClass", "Package Report", 0, QApplication::UnicodeUTF8));
-        tabWidget->setTabText(tabWidget->indexOf(tab_3), QApplication::translate("ClassSpaceCheckerClass", "Unique Class Report", 0, QApplication::UnicodeUTF8));
-        pushButtonExportCSV->setText(QApplication::translate("ClassSpaceCheckerClass", "Export to CSV", 0, QApplication::UnicodeUTF8));
+        tabWidget->setTabText(tabWidget->indexOf(tab_3), QApplication::translate("ClassSpaceCheckerClass", "Inner Class Report", 0, QApplication::UnicodeUTF8));
+        pushButtonExportCSV->setText(QApplication::translate("ClassSpaceCheckerClass", "Export this report to CSV", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };

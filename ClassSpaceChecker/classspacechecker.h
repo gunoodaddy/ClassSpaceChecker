@@ -71,7 +71,7 @@ public slots:
 	void onResultCellDoubleClicked(int row, int column);
 	void onPackageReportCellDoubleClicked(int row, int column);
 	void onPackageReportItemSelectionChanged();
-	void onUniqueClassReportItemSelectionChanged();
+	void onInnerClassReportItemSelectionChanged();
 	void onTabCurrentChanged(int index);
 	void onJarFileEditTextChanged(QString text);
 	void onClickedDelete();

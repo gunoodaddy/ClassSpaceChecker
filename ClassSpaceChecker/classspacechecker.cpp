@@ -16,12 +16,12 @@ ClassSpaceChecker::ClassSpaceChecker(QWidget *parent, Qt::WFlags flags)
 	ui.tableWidgetResult->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
 
 	ui.tableWidgetPackageReport->setColumnCount(5);
-	ui.tableWidgetPackageReport->setHorizontalHeaderLabels(QString("Package Name;Class Count;Unique Count;Diff Count;File Size").split(";"));  
+	ui.tableWidgetPackageReport->setHorizontalHeaderLabels(QString("Package Name;All Class Count;Unique Count;Diff Count;File Size").split(";"));  
 	ui.tableWidgetPackageReport->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
 
-	ui.tableWidgetUniqueClassReport->setColumnCount(3);
-	ui.tableWidgetUniqueClassReport->setHorizontalHeaderLabels(QString("Unique Class Name;Class Count;File Size").split(";"));  
-	ui.tableWidgetUniqueClassReport->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
+	ui.tableWidgetInnerClassReport->setColumnCount(3);
+	ui.tableWidgetInnerClassReport->setHorizontalHeaderLabels(QString("Class Name;Inner Class Count;File Size").split(";"));  
+	ui.tableWidgetInnerClassReport->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
 
 	ui.comboBox_JarFile->lineEdit()->setPlaceholderText("Jar File (Drag&Drop supported)");
 	ui.comboBox_JarFile->installEventFilter( this );
@@ -333,8 +333,8 @@ void ClassSpaceChecker::removeAll()
 	ui.tableWidgetResult->setRowCount(0);
 	ui.tableWidgetPackageReport->clearContents();
 	ui.tableWidgetPackageReport->setRowCount(0);
-	ui.tableWidgetUniqueClassReport->clearContents();
-	ui.tableWidgetUniqueClassReport->setRowCount(0);
+	ui.tableWidgetInnerClassReport->clearContents();
+	ui.tableWidgetInnerClassReport->setRowCount(0);
 }
 
 bool ClassSpaceChecker::loadJarFile(const QString & jarPath)
@@ -764,15 +764,17 @@ void ClassSpaceChecker::analysisUniqueClassReport()
 	if(uniqueClassMap_.size() <= 0)
 		return;
 
-	ui.tableWidgetUniqueClassReport->clearContents();
-	ui.tableWidgetUniqueClassReport->setRowCount(0);
-	ui.tableWidgetUniqueClassReport->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
+	ui.tableWidgetInnerClassReport->clearContents();
+	ui.tableWidgetInnerClassReport->setRowCount(0);
+	ui.tableWidgetInnerClassReport->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
 
 	int rowCount = 0;
 	QMap<QString, UniqueClassContext*>::iterator it = uniqueClassMap_.begin();
 	for(; it != uniqueClassMap_.end(); it++)
 	{
 		const UniqueClassContext* ctx = it.value();
+		if(ctx->classCount < 2)
+			continue;
 		QString space = QString::number(ctx->fileSize);
 
 		QTableWidgetItem *itemName = new QTableWidgetItem(ctx->uniqueClassName);
@@ -780,22 +782,22 @@ void ClassSpaceChecker::analysisUniqueClassReport()
 		itemName->setData(Qt::UserRole, qVariantFromValue((void *)ctx));
 
 		QTableWidgetItem *itemClassCount = new QTableWidgetItem();
-		itemClassCount->setData(Qt::DisplayRole, ctx->classCount);
+		itemClassCount->setData(Qt::DisplayRole, ctx->classCount - 1);
 		itemClassCount->setFlags(itemClassCount->flags() & ~Qt::ItemIsEditable);
 
 		QTableWidgetItem *itemSize = new QTableWidgetItem();
 		itemSize->setData(Qt::DisplayRole, ctx->fileSize);
 		itemSize->setFlags(itemSize->flags() & ~Qt::ItemIsEditable);
 
-		ui.tableWidgetUniqueClassReport->insertRow(rowCount);
-		ui.tableWidgetUniqueClassReport->setItem(rowCount, 0, itemName);
-		ui.tableWidgetUniqueClassReport->setItem(rowCount, 1, itemClassCount);
-		ui.tableWidgetUniqueClassReport->setItem(rowCount, 2, itemSize);
+		ui.tableWidgetInnerClassReport->insertRow(rowCount);
+		ui.tableWidgetInnerClassReport->setItem(rowCount, 0, itemName);
+		ui.tableWidgetInnerClassReport->setItem(rowCount, 1, itemClassCount);
+		ui.tableWidgetInnerClassReport->setItem(rowCount, 2, itemSize);
 
 		rowCount++;
 	}
 
-	ui.tableWidgetUniqueClassReport->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+	ui.tableWidgetInnerClassReport->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
 }
 
 
@@ -944,7 +946,7 @@ void ClassSpaceChecker::onClickedExportCSV()
 	else if(idx == 1)
 		table = ui.tableWidgetPackageReport;
 	else
-		table = ui.tableWidgetUniqueClassReport;
+		table = ui.tableWidgetInnerClassReport;
 
 	writeToCSVFile(table, fileName);
 }
@@ -1037,9 +1039,9 @@ void ClassSpaceChecker::onPackageReportItemSelectionChanged()
 	ui.lineEdit_Result->setText(resultStr);
 }
 
-void ClassSpaceChecker::onUniqueClassReportItemSelectionChanged()
+void ClassSpaceChecker::onInnerClassReportItemSelectionChanged()
 {
-	QList<QTableWidgetItem *> items = ui.tableWidgetUniqueClassReport->selectedItems();
+	QList<QTableWidgetItem *> items = ui.tableWidgetInnerClassReport->selectedItems();
 	if(items.size() <= 0)
 	{
 		ui.lineEdit_Result->setText(prevTotalResultStr_);
@@ -1057,12 +1059,12 @@ void ClassSpaceChecker::onUniqueClassReportItemSelectionChanged()
 		if(set.find(row) != set.end())
 			continue;
 
-		QTableWidgetItem *itemClassCount = ui.tableWidgetUniqueClassReport->item(item->row(), 1);
+		QTableWidgetItem *itemClassCount = ui.tableWidgetInnerClassReport->item(item->row(), 1);
 		if(itemClassCount == NULL)
 			continue;
 		classCount += itemClassCount->data(Qt::DisplayRole).toInt();
 
-		QTableWidgetItem *itemFileSize = ui.tableWidgetUniqueClassReport->item(item->row(), 2);
+		QTableWidgetItem *itemFileSize = ui.tableWidgetInnerClassReport->item(item->row(), 2);
 		if(itemFileSize == NULL)
 			continue;
 		totalSize += itemFileSize->data(Qt::DisplayRole).toInt();
@@ -1074,7 +1076,7 @@ void ClassSpaceChecker::onUniqueClassReportItemSelectionChanged()
 	resultStr += QString::number(set.size());
 	resultStr += " selected, ";
 	resultStr += QString::number(classCount);
-	resultStr += " class count, ";
+	resultStr += " inner class count, ";
 	resultStr += numberDot(QString::number(totalSize));
 	resultStr += " bytes";
 

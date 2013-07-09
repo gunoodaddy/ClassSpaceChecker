@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="ClassSpaceChecker"
+	Name="JavaClassAnalysis"
 	ProjectGUID="{AACFD08A-C485-4F4D-B354-201BCC0A6358}"
 	RootNamespace="ClassSpaceChecker"
 	Keyword="Qt4VSv1.0"
