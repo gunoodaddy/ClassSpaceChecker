@@ -2,37 +2,81 @@
 #include <QtGui>
 #include <qt_windows.h>
 #include "XZip/XUnZip.h"
+#include "SettingManager.hpp"
+#include "jclass/jclass.h"
+
+CSettingManager gSettingManager;
 
 ClassSpaceChecker::ClassSpaceChecker(QWidget *parent, Qt::WFlags flags)
-	: QMainWindow(parent, flags), prevJdProcessId_(0)
+	: QMainWindow(parent, flags), prevJdProcessId_(0), initJarFileComboFlag_(false)
 {
+	gSettingManager.setIniPath(qApp->applicationDirPath() + QDir::separator() + "data.ini");
+
 	ui.setupUi(this);
 	ui.tableWidgetResult->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
 
-	ui.lineEdit_JarFile->setDragEnabled(true);
-	ui.lineEdit_JarFile->installEventFilter( this );
+	ui.tableWidgetPackageReport->setColumnCount(5);
+	ui.tableWidgetPackageReport->setHorizontalHeaderLabels(QString("Package Name;Class Count;Unique Count;Diff Count;File Size").split(";"));  
+	ui.tableWidgetPackageReport->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
+
+	ui.tableWidgetUniqueClassReport->setColumnCount(3);
+	ui.tableWidgetUniqueClassReport->setHorizontalHeaderLabels(QString("Unique Class Name;Class Count;File Size").split(";"));  
+	ui.tableWidgetUniqueClassReport->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
+
+	ui.comboBox_JarFile->lineEdit()->setPlaceholderText("Jar File (Drag&Drop supported)");
+	ui.comboBox_JarFile->installEventFilter( this );
 	ui.lineEdit_MapFile->setDragEnabled(true);
 	ui.lineEdit_MapFile->installEventFilter( this );
 	ui.tableWidgetResult->installEventFilter( this );
-
-	ui.lineEdit_JarFile->setText(getSetting("jarPath").toString());
-	ui.lineEdit_MapFile->setText(getSetting("mapPath").toString());
-	ui.lineEdit_Search->setText(getSetting("searchText").toString());
 
 	ui.lineEdit_Result->setText("Press Analysis button first.");
 
 	updateWindowTitle();
 
-	if(ui.lineEdit_JarFile->text().isEmpty() && ui.lineEdit_MapFile->text().isEmpty())
+	loadPresetList(gSettingManager.getLastPresetId());
+
+	loadPreset(gSettingManager.getLastPresetId());
+
+	if(ui.comboBox_JarFile->currentText().isEmpty() && ui.lineEdit_MapFile->text().isEmpty())
 	{
 		// To show placeholder text at initial launch time
 		ui.pushButtonStart->setFocus();
 	}
+
+	buildStatusBar();
 }
 
 ClassSpaceChecker::~ClassSpaceChecker()
 {
 
+}
+
+void ClassSpaceChecker::buildStatusBar()
+{
+	progressBar_ = new QProgressBar();
+
+	// 한번 넣었다 빼야지 프로그레스바의 사이즈가 도중에 변경되지 않는다.. 편법임.
+	installStatusProgressBar(0);
+	uninstallStatusProgressBar();
+}
+
+void ClassSpaceChecker::installStatusProgressBar(int maxValue)
+{
+	progressBar_->setRange(0, maxValue);
+	progressBar_->setValue(0);
+	progressBar_->show();
+
+	ui.statusBar->addPermanentWidget(progressBar_, 1);
+}
+
+void ClassSpaceChecker::uninstallStatusProgressBar()
+{
+	ui.statusBar->removeWidget( progressBar_ );
+}
+
+void ClassSpaceChecker::setStatusProgressValue(int pos)
+{
+	progressBar_->setValue(pos);
 }
 
 bool ClassSpaceChecker::eventFilter(QObject *object, QEvent *evt)
@@ -46,7 +90,7 @@ bool ClassSpaceChecker::eventFilter(QObject *object, QEvent *evt)
 		return QMainWindow::eventFilter(object, evt);
 	}
 
-	if(object == ui.lineEdit_JarFile 
+	if(object == ui.comboBox_JarFile 
 		|| object == ui.lineEdit_MapFile
 		) 
 	{
@@ -72,7 +116,7 @@ bool ClassSpaceChecker::eventFilter(QObject *object, QEvent *evt)
 
 					if(urlList.size() == 1) 
 					{
-						if(object == ui.lineEdit_JarFile)
+						if(object == ui.comboBox_JarFile)
 						{
 							if(path.indexOf(".jar", 0, Qt::CaseInsensitive) < 0 
 								&& path.indexOf(".zip", 0, Qt::CaseInsensitive) < 0
@@ -119,7 +163,9 @@ bool ClassSpaceChecker::eventFilter(QObject *object, QEvent *evt)
 					if(path.indexOf(".txt", 0, Qt::CaseInsensitive) >= 0)
 						ui.lineEdit_MapFile->setText(path);
 					if(path.indexOf(".jar", 0, Qt::CaseInsensitive) >= 0 || path.indexOf(".zip", 0, Qt::CaseInsensitive) >= 0)
-						ui.lineEdit_JarFile->setText(path);
+					{
+						checkAndJarFilePreset(path);
+					}
 				}
 			}
 		}
@@ -127,18 +173,88 @@ bool ClassSpaceChecker::eventFilter(QObject *object, QEvent *evt)
 	return QMainWindow::eventFilter(object, evt);
 }
 
+void ClassSpaceChecker::checkAndJarFilePreset(const QString &jarPath)
+{
+	CPresetData preset = gSettingManager.getPresetDataWithKeyName(jarPath);
+
+	if(preset.isEmpty()) 
+	{
+		ui.comboBox_JarFile->setEditText(jarPath);
+		ui.lineEdit_MapFile->setText("");
+	}
+	else
+	{
+		loadPreset(preset.getId());
+	}
+}
+
+
+void ClassSpaceChecker::loadPresetList(const QString &selectPresetId)
+{
+	initJarFileComboFlag_ = true;
+	QList<CPresetData> presets = gSettingManager.getPresetList();
+
+	ui.comboBox_JarFile->clear();
+
+	int selected = -1;
+	for(int i = 0; i < presets.size(); i++)
+	{
+		CPresetData preset = presets.at(i);
+		if(preset.getId() == selectPresetId)
+			selected = i;
+		ui.comboBox_JarFile->addItem(preset.getKeyName(), preset.getId());
+	}
+	
+	if(selected > -1) {
+		ui.comboBox_JarFile->setCurrentIndex(selected);
+	}
+
+	ui.comboBox_JarFile->model()->sort(0);
+
+	initJarFileComboFlag_ = false;
+}
+
+
+void ClassSpaceChecker::loadPreset(const QString &presetId)
+{
+	CPresetData preset = gSettingManager.getPresetDataWithId(presetId);
+
+	QString mapPath = preset.getValue("mapPath").toString();
+
+	ui.comboBox_JarFile->setEditText(preset.getKeyName());
+	ui.lineEdit_MapFile->setText(mapPath);
+}
+
+void ClassSpaceChecker::saveCurrentPreset()
+{
+	QString jarPath = ui.comboBox_JarFile->currentText();
+
+	CPresetData preset = gSettingManager.getPresetDataWithKeyName(jarPath);
+
+	if(preset.isEmpty()) 
+	{
+		preset = gSettingManager.createPreset(jarPath);
+	}
+
+	QString mapPath = ui.lineEdit_MapFile->text();
+
+	preset.setKeyName(jarPath);
+	preset.setValue("mapPath", mapPath);
+
+	gSettingManager.setLastPresetId(preset.getId());
+
+	loadPresetList(preset.getId());
+}
+
+
 void ClassSpaceChecker::onCheckButtonClicked()
 {
-	QString jarPath = ui.lineEdit_JarFile->text();
+	QString jarPath = ui.comboBox_JarFile->currentText();
 	QString mapPath = ui.lineEdit_MapFile->text();
 	QString searchText = ui.lineEdit_Search->text();
 
 	//jarPath = "C:\\work\\LINE_2013\\util\\TroublesomeRequester\\Download\\2013\\LINE.jar";
 	//mapPath = "C:\\work\\LINE_2013\\util\\TroublesomeRequester\\Download\\2013\\pro_map.txt";
-
-	setSetting("jarPath", jarPath);
-	setSetting("mapPath", mapPath);
-	setSetting("searchText", searchText);
 
 	removeAll();
 
@@ -155,9 +271,16 @@ void ClassSpaceChecker::onCheckButtonClicked()
 	
 	if(loadJarFile(jarPath))
 	{
-		collectClassFile();
-		searchClass(ui.checkBox_ByUncryptName->isChecked(), searchText);
+		collectData();
+
+		searchClassByName(ui.checkBox_ByUncryptName->isChecked(), ui.checkBox_IgnoreInnerClass->isChecked(), searchText);
+		analysisUniqueClassReport();
+		analysisPackageReport();
 	}
+
+	ui.tabWidget->setCurrentIndex(0);
+
+	saveCurrentPreset();
 }
 
 void ClassSpaceChecker::changeResultHeader()
@@ -166,15 +289,15 @@ void ClassSpaceChecker::changeResultHeader()
 	{
 		ui.checkBox_ByUncryptName->setChecked(true);
 		ui.checkBox_ByUncryptName->setEnabled(true);
-		ui.tableWidgetResult->setColumnCount(3);
-		ui.tableWidgetResult->setHorizontalHeaderLabels(QString("Class Name;File Size;Uncrypted Name").split(";"));  
+		ui.tableWidgetResult->setColumnCount(5);
+		ui.tableWidgetResult->setHorizontalHeaderLabels(QString("Class Name;File Size;Uncrypted Name;Method Count;Referenced Count;").split(";"));  
 	}
 	else
 	{
 		ui.checkBox_ByUncryptName->setChecked(false);
 		ui.checkBox_ByUncryptName->setEnabled(false);
-		ui.tableWidgetResult->setColumnCount(2);
-		ui.tableWidgetResult->setHorizontalHeaderLabels(QString("Class Name;File Size;").split(";"));  
+		ui.tableWidgetResult->setColumnCount(4);
+		ui.tableWidgetResult->setHorizontalHeaderLabels(QString("Class Name;File Size;Method Count;Referenced Count;").split(";"));  
 	}
 }
 
@@ -186,8 +309,32 @@ void ClassSpaceChecker::removeAll()
 		ClassFileContext* ctx = *it;
 		delete ctx;
 	}
+
+	QMap<QString, PackageContext*>::iterator it2 = packageMap_.begin();
+	for(; it2 != packageMap_.end(); it2++)
+	{
+		PackageContext* ctx = it2.value();
+		delete ctx;
+	}
+
+	QMap<QString, UniqueClassContext*>::iterator it3 = uniqueClassMap_.begin();
+	for(; it3 != uniqueClassMap_.end(); it3++)
+	{
+		UniqueClassContext* ctx = it3.value();
+		delete ctx;
+	}
+
+	uniqueClassMap_.clear();
+	packageMap_.clear();
 	classList_.clear();
 	proguardMap_VK_.clear();
+
+	ui.tableWidgetResult->clearContents();
+	ui.tableWidgetResult->setRowCount(0);
+	ui.tableWidgetPackageReport->clearContents();
+	ui.tableWidgetPackageReport->setRowCount(0);
+	ui.tableWidgetUniqueClassReport->clearContents();
+	ui.tableWidgetUniqueClassReport->setRowCount(0);
 }
 
 bool ClassSpaceChecker::loadJarFile(const QString & jarPath)
@@ -199,7 +346,7 @@ bool ClassSpaceChecker::loadJarFile(const QString & jarPath)
 	if( !hz ) 
 	{
 		QMessageBox::warning(this, "", tr("Jar file not found."));
-		ui.lineEdit_JarFile->setFocus();
+		ui.comboBox_JarFile->setFocus();
 		return false;
 	}
 
@@ -211,6 +358,9 @@ bool ClassSpaceChecker::loadJarFile(const QString & jarPath)
 			break;
 		}
 		int numitems = ze.index;
+
+		installStatusProgressBar(numitems);
+
 		for( int i = 0; i < numitems; i++ )
 		{ 
 			GetZipItem( hz, i, &ze );
@@ -233,8 +383,106 @@ bool ClassSpaceChecker::loadJarFile(const QString & jarPath)
 			ctx->fullClassNameForKey.remove(".class");
 			ctx->fullClassNameForKey.replace("/", "_");
 
+			QString output = generateFileTempPath() + ctx->fullClassNameForKey + ".class";
+			zr = UnzipItem(hz, i, (void*)output.toStdWString().c_str(), 0, ZIP_FILENAME);
+			if( zr != ZR_OK ) 
+			{
+				if(fileName.indexOf("aux.class") < 0)
+				{
+					QMessageBox::warning(this, "", tr("Jar file is invalid. Cannot unzip file : ") + fileName);
+					removeAll();
+					return false;
+				}
+			}
+
+			ctx->decompiledBuffer = decompileClassAndReadFile(output);
+	
+			{
+				JavaClass *clazz = jclass_class_new(toMBCS(output).c_str(), NULL);
+
+				if(clazz != NULL)
+				{
+					ctx->methodCount = clazz->methods_count;
+					ConstantPool *constant_pool = clazz->constant_pool;
+					
+					if(constant_pool != NULL)
+					{
+						char* class_name;
+						char* method_name;
+						char* package_name;
+						char* this_class = jclass_cp_get_this_class_name(constant_pool);
+						char* this_package = jclass_get_package_from_class_name(this_class);
+
+						for(int count = 1; count < constant_pool->count; count++)
+						{
+							switch(constant_pool->entries[count].tag)
+							{
+							case CONSTANT_Class:
+								class_name = jclass_cp_get_class_name(constant_pool, count, 1);
+								package_name = jclass_get_package_from_class_name(class_name);
+
+								if(!jclass_string_is_primitive_type(class_name))
+								{
+									if(strcmp(class_name, this_class) != 0)
+									{
+										//if(strchr(class_name,'$') == NULL)
+										{
+											ctx->classReferencedList.insert(class_name);
+										}
+									}
+								}
+								free(class_name);
+
+								if(package_name != NULL)
+								{	
+									//if(do_flag & PACKAGES)
+									//	string_list_add(package_list, package_name, IS_DEPENDENCY);
+									free(package_name);
+								}
+								break;
+
+							case CONSTANT_Methodref:
+							case CONSTANT_InterfaceMethodref:
+								//if(do_flag & METHOD_REF)
+								//{
+								//	method_name = jclass_cp_get_method_signature(constant_pool, count, 1);
+								//	if(method_name != NULL)
+								//	{
+								//		class_name = jclass_get_class_from_method_signature(method_name);
+
+								//		method_flag = (strcmp(class_name, this_class)? IS_DEPENDENCY: flag);
+								//		
+								//		if (constant_pool->entries[count].tag == CONSTANT_Methodref)
+								//			string_list_add(method_list, method_name, method_flag);
+								//		else
+								//			string_list_add(interface_method_list, method_name, method_flag);
+
+								//		free(class_name);
+								//		free(method_name);
+								//	}
+
+								//}
+								break;
+							}
+						}
+						
+						free(this_class);
+						free(this_package);
+					}
+
+					jclass_class_free(clazz);
+				}
+			}
+
+			QFile f(output);
+			f.remove();
+
 			classList_.append(ctx);
+
+			setStatusProgressValue(i + 1);
 		}
+
+		uninstallStatusProgressBar();
 	} while( false );
 
 	CloseZip(hz);
@@ -283,13 +531,13 @@ bool ClassSpaceChecker::loadMapFile(const QString & mapPath)
 }
 
 
-void ClassSpaceChecker::collectClassFile()
+void ClassSpaceChecker::collectData()
 {
-	if(proguardMap_VK_.size() <= 0)
-		return;
-		
 	QList<ClassFileContext*>::iterator it = classList_.begin();
-	for(; it != classList_.end(); it++)
+
+	installStatusProgressBar(classList_.size());
+
+	for(int i = 0; it != classList_.end(); it++, i++)
 	{
 		ClassFileContext* ctx = *it;
 		
@@ -298,10 +546,123 @@ void ClassSpaceChecker::collectClassFile()
 		{
 			ctx->originalName = it.value();
 		}
+
+		QList<ClassFileContext*>::iterator it2 = classList_.begin();
+		for(int j = 0; it2 != classList_.end(); it2++, j++)
+		{
+			ClassFileContext* ctx2 = *it2;
+			if(ctx2->classReferencedList.find(ctx->className) != ctx2->classReferencedList.end()) 
+			{
+				ctx->referencedCount++;
+			}
+		}
+		//if(ctx->referencedCount == 0) 
+		//{
+		//	QList<ClassFileContext*>::iterator it2 = classList_.begin();
+		//	for(int j = 0; it2 != classList_.end(); it2++, j++)
+		//	{
+		//		ClassFileContext* ctx2 = *it2;
+		//		if(ctx2->decompiledBuffer.contains(ctx->className.toStdString().c_str())) 
+		//		{
+		//			ctx->referencedCount++;
+		//		}
+		//	}
+		//}
+
+
+		QString packageName;
+		int pos = ctx->originalName.lastIndexOf(".");
+		if(pos >= 0)
+			packageName = ctx->originalName.left(pos);
+		else
+			packageName = ctx->originalName;
+
+		QString uniqueClassName;
+		{
+			int pos = ctx->originalName.indexOf("$");
+			if(pos >= 0)
+				uniqueClassName = ctx->originalName.left(pos);
+			else
+				uniqueClassName = ctx->originalName;
+		}
+	
+		PackageContext* ctxPackage = NULL;
+		QMap<QString, PackageContext*>::iterator itPackage = packageMap_.find(packageName);
+		if(itPackage == packageMap_.end())
+		{
+			ctxPackage = new PackageContext();
+			ctxPackage->classCount = 0;
+			ctxPackage->fileSize = 0;
+			packageMap_.insert(packageName, ctxPackage);
+		}
+		else
+		{
+			ctxPackage = itPackage.value();
+		}
+
+		if(ctxPackage != NULL)
+		{
+			ctxPackage->packageName = packageName;
+			ctxPackage->fileSize += ctx->fileSize;
+			ctxPackage->classCount++;
+			ctxPackage->uniqueClassNameSet.insert(uniqueClassName);
+		}
+
+		UniqueClassContext* ctxUniqueClass = NULL;
+		QMap<QString, UniqueClassContext*>::iterator itUniqueClass = uniqueClassMap_.find(uniqueClassName);
+		if(itUniqueClass == uniqueClassMap_.end())
+		{
+			ctxUniqueClass = new UniqueClassContext();
+			ctxUniqueClass->classCount = 0;
+			ctxUniqueClass->fileSize = 0;
+			uniqueClassMap_.insert(uniqueClassName, ctxUniqueClass);
+		}
+		else
+		{
+			ctxUniqueClass = itUniqueClass.value();
+		}
+
+		if(ctxUniqueClass != NULL)
+		{
+			ctxUniqueClass->uniqueClassName = uniqueClassName;
+			ctxUniqueClass->fileSize += ctx->fileSize;
+			ctxUniqueClass->classCount++;
+		}
+
+		setStatusProgressValue(i + 1);
 	}
+
+	uninstallStatusProgressBar();
 }
 
-void ClassSpaceChecker::searchClass(bool useUncryptName, const QString & searchText) 
+QByteArray ClassSpaceChecker::decompileClassAndReadFile(const QString &classFilePath) 
+{	
+	QString uri = qApp->applicationDirPath() + "\\jad\\jad.exe";
+
+	// TODO
+	//runProgram(uri, "-o -d \"" + generateFileTempPath() + "\" \"" + classFilePath + "\"", true, true);
+
+	QString outputPath = classFilePath;
+	//outputPath = outputPath.replace(".class", ".jad");
+
+	QFile f(outputPath);
+	if(!f.open(QIODevice::ReadOnly))
+		return "";
+	return f.readAll();
+}
+
+void ClassSpaceChecker::searchClassByName(bool useUncryptName, bool ignoreInnerClass, const QString & searchText) 
+{
+	searchClassInternal(searchText, true, useUncryptName, ignoreInnerClass);
+}
+
+void ClassSpaceChecker::searchClassByText(const QString & searchText) 
+{
+	searchClassInternal(searchText, false, false, false);
+}
+
+
+void ClassSpaceChecker::searchClassInternal(const QString & searchText, bool classNameMode, bool useUncryptName, bool ignoreInnerClass) 
 {
 	if(classList_.size() <= 0)
 		return;
@@ -315,41 +676,66 @@ void ClassSpaceChecker::searchClass(bool useUncryptName, const QString & searchT
 	QList<ClassFileContext*>::iterator it = classList_.begin();
 	for(; it != classList_.end(); it++)
 	{
+		int col = 0;
 		const ClassFileContext* ctx = *it;
+
+		if(ignoreInnerClass && ctx->originalName.indexOf("$") > 0)
+			continue;
+
+
 		if(searchText.isEmpty() == false)
 		{
-			if(useUncryptName)
+			if(classNameMode)
 			{
-				if(ctx->originalName.contains(QRegExp(searchText, Qt::CaseInsensitive)) == false)
-					continue;
+				if(useUncryptName)
+				{
+					if(ctx->originalName.contains(QRegExp(searchText, Qt::CaseInsensitive)) == false)
+						continue;
+				}
+				else
+				{
+					if(ctx->className.contains(QRegExp(searchText, Qt::CaseInsensitive)) == false)
+						continue;
+				}
 			}
 			else
 			{
-				if(ctx->className.contains(QRegExp(searchText, Qt::CaseInsensitive)) == false)
+				if(ctx->decompiledBuffer.contains(searchText.toStdString().c_str()) == false)
+				//if(ctx->decompiledBuffer.contains(QRegExp(searchText, Qt::CaseInsensitive)) == false)
 					continue;
 			}
 		}
 
 		QString space = QString::number(ctx->fileSize);
 
+		ui.tableWidgetResult->insertRow(rowCount);
+
 		QTableWidgetItem *itemOriginal = new QTableWidgetItem(ctx->className);
 		itemOriginal->setFlags(itemOriginal->flags() & ~Qt::ItemIsEditable);
 		itemOriginal->setData(Qt::UserRole, qVariantFromValue((void *)ctx));
+		ui.tableWidgetResult->setItem(rowCount, col++, itemOriginal);
 
 		QTableWidgetItem *itemSize = new QTableWidgetItem();
 		itemSize->setData(Qt::DisplayRole, ctx->fileSize);
 		itemSize->setFlags(itemSize->flags() & ~Qt::ItemIsEditable);
+		ui.tableWidgetResult->setItem(rowCount, col++, itemSize);
 
-		ui.tableWidgetResult->insertRow(rowCount);
-		ui.tableWidgetResult->setItem(rowCount, 0, itemOriginal);
-		ui.tableWidgetResult->setItem(rowCount, 1, itemSize);
-
-		if(ui.tableWidgetResult->columnCount() > 2)
+		if(currentMapPath_.isEmpty() == false)
 		{
 			QTableWidgetItem *itemCrypt = new QTableWidgetItem(ctx->originalName);
 			itemCrypt->setFlags(itemCrypt->flags() & ~Qt::ItemIsEditable);
-			ui.tableWidgetResult->setItem(rowCount, 2, itemCrypt);
+			ui.tableWidgetResult->setItem(rowCount, col++, itemCrypt);
 		}
+
+		QTableWidgetItem *itemMethodCount = new QTableWidgetItem();
+		itemMethodCount->setData(Qt::DisplayRole, ctx->methodCount);
+		itemMethodCount->setFlags(itemMethodCount->flags() & ~Qt::ItemIsEditable);
+		ui.tableWidgetResult->setItem(rowCount, col++, itemMethodCount);
+
+		QTableWidgetItem *itemRefCount = new QTableWidgetItem();
+		itemRefCount->setData(Qt::DisplayRole, ctx->referencedCount);
+		itemRefCount->setFlags(itemRefCount->flags() & ~Qt::ItemIsEditable);
+		ui.tableWidgetResult->setItem(rowCount, col++, itemRefCount);
 
 		rowCount++;
 
@@ -371,7 +757,99 @@ void ClassSpaceChecker::searchClass(bool useUncryptName, const QString & searchT
 	prevTotalResultStr_ = resultStr;
 }
 
-void ClassSpaceChecker::writeToCSVFile(const QString & outputPath)
+
+
+void ClassSpaceChecker::analysisUniqueClassReport()
+{
+	if(uniqueClassMap_.size() <= 0)
+		return;
+
+	ui.tableWidgetUniqueClassReport->clearContents();
+	ui.tableWidgetUniqueClassReport->setRowCount(0);
+	ui.tableWidgetUniqueClassReport->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
+
+	int rowCount = 0;
+	QMap<QString, UniqueClassContext*>::iterator it = uniqueClassMap_.begin();
+	for(; it != uniqueClassMap_.end(); it++)
+	{
+		const UniqueClassContext* ctx = it.value();
+		QString space = QString::number(ctx->fileSize);
+
+		QTableWidgetItem *itemName = new QTableWidgetItem(ctx->uniqueClassName);
+		itemName->setFlags(itemName->flags() & ~Qt::ItemIsEditable);
+		itemName->setData(Qt::UserRole, qVariantFromValue((void *)ctx));
+
+		QTableWidgetItem *itemClassCount = new QTableWidgetItem();
+		itemClassCount->setData(Qt::DisplayRole, ctx->classCount);
+		itemClassCount->setFlags(itemClassCount->flags() & ~Qt::ItemIsEditable);
+
+		QTableWidgetItem *itemSize = new QTableWidgetItem();
+		itemSize->setData(Qt::DisplayRole, ctx->fileSize);
+		itemSize->setFlags(itemSize->flags() & ~Qt::ItemIsEditable);
+
+		ui.tableWidgetUniqueClassReport->insertRow(rowCount);
+		ui.tableWidgetUniqueClassReport->setItem(rowCount, 0, itemName);
+		ui.tableWidgetUniqueClassReport->setItem(rowCount, 1, itemClassCount);
+		ui.tableWidgetUniqueClassReport->setItem(rowCount, 2, itemSize);
+
+		rowCount++;
+	}
+
+	ui.tableWidgetUniqueClassReport->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+}
+
+
+void ClassSpaceChecker::analysisPackageReport() 
+{
+	if(packageMap_.size() <= 0)
+		return;
+
+	ui.tableWidgetPackageReport->clearContents();
+	ui.tableWidgetPackageReport->setRowCount(0);
+	ui.tableWidgetPackageReport->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
+
+	int rowCount = 0;
+	QMap<QString, PackageContext*>::iterator it = packageMap_.begin();
+	for(; it != packageMap_.end(); it++)
+	{
+		const PackageContext* ctx = it.value();
+		QString space = QString::number(ctx->fileSize);
+
+		QTableWidgetItem *itemOriginal = new QTableWidgetItem(ctx->packageName);
+		itemOriginal->setFlags(itemOriginal->flags() & ~Qt::ItemIsEditable);
+		itemOriginal->setData(Qt::UserRole, qVariantFromValue((void *)ctx));
+
+		QTableWidgetItem *itemClassCount = new QTableWidgetItem();
+		itemClassCount->setData(Qt::DisplayRole, ctx->classCount);
+		itemClassCount->setFlags(itemClassCount->flags() & ~Qt::ItemIsEditable);
+
+		QTableWidgetItem *itemUniqueClassCount = new QTableWidgetItem();
+		itemUniqueClassCount->setData(Qt::DisplayRole, ctx->uniqueClassNameSet.size());
+		itemUniqueClassCount->setFlags(itemUniqueClassCount->flags() & ~Qt::ItemIsEditable);
+
+		QTableWidgetItem *itemDiffCount = new QTableWidgetItem();
+		itemDiffCount->setData(Qt::DisplayRole, (ctx->classCount - ctx->uniqueClassNameSet.size()));
+		itemDiffCount->setFlags(itemDiffCount->flags() & ~Qt::ItemIsEditable);
+
+		QTableWidgetItem *itemSize = new QTableWidgetItem();
+		itemSize->setData(Qt::DisplayRole, ctx->fileSize);
+		itemSize->setFlags(itemSize->flags() & ~Qt::ItemIsEditable);
+
+		ui.tableWidgetPackageReport->insertRow(rowCount);
+		ui.tableWidgetPackageReport->setItem(rowCount, 0, itemOriginal);
+		ui.tableWidgetPackageReport->setItem(rowCount, 1, itemClassCount);
+		ui.tableWidgetPackageReport->setItem(rowCount, 2, itemUniqueClassCount);
+		ui.tableWidgetPackageReport->setItem(rowCount, 3, itemDiffCount);
+		ui.tableWidgetPackageReport->setItem(rowCount, 4, itemSize);
+
+		rowCount++;
+	}
+
+	ui.tableWidgetPackageReport->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+}
+
+
+void ClassSpaceChecker::writeToCSVFile(const QTableWidget *tableWidget, const QString & outputPath)
 {
 	QFile outputFile(outputPath);
 	if (!outputFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
@@ -381,30 +859,30 @@ void ClassSpaceChecker::writeToCSVFile(const QString & outputPath)
 		return;
 	}
 
-	for(int i = 0; i < ui.tableWidgetResult->columnCount(); i++) 
+	for(int i = 0; i < tableWidget->columnCount(); i++) 
 	{
 		if(i != 0)
 		{
 			outputFile.write(",");
 		}
 
-		QTableWidgetItem *header = ui.tableWidgetResult->horizontalHeaderItem(i);
+		QTableWidgetItem *header = tableWidget->horizontalHeaderItem(i);
 		outputFile.write("\"");
 		outputFile.write(header->text().toStdString().c_str());
 		outputFile.write("\"");
 	}
 	outputFile.write("\n");
 
-	for(int i = 0; i < ui.tableWidgetResult->rowCount(); i++)
+	for(int i = 0; i < tableWidget->rowCount(); i++)
 	{
-		for(int j = 0; j < ui.tableWidgetResult->columnCount(); j++)
+		for(int j = 0; j < tableWidget->columnCount(); j++)
 		{
 			if(j != 0)
 			{
 				outputFile.write(",");
 			}
 
-			QTableWidgetItem *item = ui.tableWidgetResult->item(i, j);
+			QTableWidgetItem *item = tableWidget->item(i, j);
 
 			outputFile.write("\"");
 			outputFile.write(item->text().toStdString().c_str());
@@ -417,22 +895,27 @@ void ClassSpaceChecker::writeToCSVFile(const QString & outputPath)
 	outputFile.close();
 }
 
+void ClassSpaceChecker::onChangedSearchClassName(QString text)
+{
+	ui.tabWidget->setCurrentIndex(0);
+	searchClassByName(ui.checkBox_ByUncryptName->isChecked(), ui.checkBox_IgnoreInnerClass->isChecked(), text);
+}
+
 void ClassSpaceChecker::onChangedSearchText(QString text)
 {
-	setSetting("searchText", text);
-
-	searchClass(ui.checkBox_ByUncryptName->isChecked(), text);
+	ui.tabWidget->setCurrentIndex(0);
+	searchClassByText(text);
 }
 
 
 void ClassSpaceChecker::onClickedJarFile()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Jar File"), ui.lineEdit_JarFile->text(), tr("Jar Files (*.jar *.zip)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Jar File"), ui.comboBox_JarFile->currentText(), tr("Jar Files (*.jar *.zip)"));
  
 	if(fileName.isEmpty() == false)
 	{
-		ui.lineEdit_JarFile->setText(fileName);
-		ui.lineEdit_JarFile->setFocus();
+		checkAndJarFilePreset(fileName);
+		ui.comboBox_JarFile->setFocus();
 	}
 }
 
@@ -451,13 +934,19 @@ void ClassSpaceChecker::onClickedMapFile()
 void ClassSpaceChecker::onClickedExportCSV()
 {
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Export to CSV File"), tr(""), tr("CSV Files (*.csv)"));
- 
-	writeToCSVFile(fileName);
-}
+	if(fileName.isEmpty())
+		return;
 
-void ClassSpaceChecker::onClickedByUncryptName()
-{
-	searchClass(ui.checkBox_ByUncryptName->isChecked(), ui.lineEdit_Search->text());
+	QTableWidget *table = NULL;
+	int idx = ui.tabWidget->currentIndex();
+	if(idx == 0)
+		table = ui.tableWidgetResult;
+	else if(idx == 1)
+		table = ui.tableWidgetPackageReport;
+	else
+		table = ui.tableWidgetUniqueClassReport;
+
+	writeToCSVFile(table, fileName);
 }
 
 void ClassSpaceChecker::onResultItemSelectionChanged()
@@ -491,7 +980,6 @@ void ClassSpaceChecker::onResultItemSelectionChanged()
 
 
 	QString resultStr;
-	resultStr += "Total : ";
 	resultStr += QString::number(classCount);
 	resultStr += " class selected, ";
 	resultStr += numberDot(QString::number(totalSize));
@@ -500,6 +988,103 @@ void ClassSpaceChecker::onResultItemSelectionChanged()
 	ui.lineEdit_Result->setText(resultStr);
 }
 
+void ClassSpaceChecker::onPackageReportItemSelectionChanged()
+{
+	QList<QTableWidgetItem *> items = ui.tableWidgetPackageReport->selectedItems();
+	if(items.size() <= 0)
+	{
+		ui.lineEdit_Result->setText(prevTotalResultStr_);
+		return;
+	}
+
+	QSet<int> set;
+	int classCount = 0;
+	int uniqueClassCount = 0;
+	int totalSize = 0;
+	for(int i = 0; i < items.size(); i++) 
+	{
+		QTableWidgetItem *item = items.at(i);
+		int row = item->row();
+		if(set.find(row) != set.end())
+			continue;
+
+		QTableWidgetItem *itemClassCount = ui.tableWidgetPackageReport->item(item->row(), 1);
+		if(itemClassCount == NULL)
+			continue;
+		classCount += itemClassCount->data(Qt::DisplayRole).toInt();
+
+		QTableWidgetItem *itemUniqueClassCount = ui.tableWidgetPackageReport->item(item->row(), 2);
+		if(itemUniqueClassCount == NULL)
+			continue;
+		uniqueClassCount += itemUniqueClassCount->data(Qt::DisplayRole).toInt();
+
+		QTableWidgetItem *itemFileSize = ui.tableWidgetPackageReport->item(item->row(), 4);
+		if(itemFileSize == NULL)
+			continue;
+		totalSize += itemFileSize->data(Qt::DisplayRole).toInt();
+		set.insert(row);
+	}
+
+
+	QString resultStr;
+	resultStr += QString::number(classCount);
+	resultStr += " class count, ";
+	resultStr += QString::number(uniqueClassCount);
+	resultStr += " unique class count, ";
+	resultStr += numberDot(QString::number(totalSize));
+	resultStr += " bytes";
+
+	ui.lineEdit_Result->setText(resultStr);
+}
+
+void ClassSpaceChecker::onUniqueClassReportItemSelectionChanged()
+{
+	QList<QTableWidgetItem *> items = ui.tableWidgetUniqueClassReport->selectedItems();
+	if(items.size() <= 0)
+	{
+		ui.lineEdit_Result->setText(prevTotalResultStr_);
+		return;
+	}
+
+	QSet<int> set;
+	int classCount = 0;
+	int uniqueClassCount = 0;
+	int totalSize = 0;
+	for(int i = 0; i < items.size(); i++) 
+	{
+		QTableWidgetItem *item = items.at(i);
+		int row = item->row();
+		if(set.find(row) != set.end())
+			continue;
+
+		QTableWidgetItem *itemClassCount = ui.tableWidgetUniqueClassReport->item(item->row(), 1);
+		if(itemClassCount == NULL)
+			continue;
+		classCount += itemClassCount->data(Qt::DisplayRole).toInt();
+
+		QTableWidgetItem *itemFileSize = ui.tableWidgetUniqueClassReport->item(item->row(), 2);
+		if(itemFileSize == NULL)
+			continue;
+		totalSize += itemFileSize->data(Qt::DisplayRole).toInt();
+		set.insert(row);
+	}
+
+
+	QString resultStr;
+	resultStr += QString::number(set.size());
+	resultStr += " selected, ";
+	resultStr += QString::number(classCount);
+	resultStr += " class count, ";
+	resultStr += numberDot(QString::number(totalSize));
+	resultStr += " bytes";
+
+	ui.lineEdit_Result->setText(resultStr);
+}
+
+void ClassSpaceChecker::onPackageReportCellDoubleClicked(int row, int column)
+{
+	
+}
 
 void ClassSpaceChecker::onResultCellDoubleClicked(int row, int column)
 {
@@ -514,8 +1099,41 @@ void ClassSpaceChecker::onResultCellDoubleClicked(int row, int column)
 	openClassFile(currentJarPath_, ctx);
 }
 
+void ClassSpaceChecker::onTabCurrentChanged(int index)
+{
+	ui.lineEdit_Result->setText(prevTotalResultStr_);
+}
 
 
+unsigned long ClassSpaceChecker::runProgram(const QString &theUri, const QString &param, bool silentMode, bool waitExit)
+{
+	QString uri = QDir::toNativeSeparators(theUri);
+
+	std::wstring uriW = uri.toStdWString().c_str();
+	std::wstring paramW = param.toStdWString().c_str();
+
+	SHELLEXECUTEINFOW shellExInfo;
+	memset(&shellExInfo, 0, sizeof(SHELLEXECUTEINFO));
+	shellExInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+	shellExInfo.hwnd = NULL;
+	shellExInfo.lpVerb = L"open";
+	shellExInfo.lpFile = uriW.c_str();
+	shellExInfo.lpParameters = paramW.c_str();
+	shellExInfo.lpDirectory = NULL;
+	shellExInfo.nShow = silentMode ? SW_HIDE : SW_SHOWNORMAL;
+	shellExInfo.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE;
+	shellExInfo.hInstApp = NULL;
+
+	ShellExecuteEx(&shellExInfo);
+
+	if(waitExit)
+		WaitForSingleObject(shellExInfo.hProcess,INFINITE);
+
+	unsigned long processId = GetProcessId(shellExInfo.hProcess); 
+
+
+	return processId;
+}
 
 void ClassSpaceChecker::openClassFile(const QString jarPath, const ClassFileContext *ctx)
 {
@@ -528,7 +1146,7 @@ void ClassSpaceChecker::openClassFile(const QString jarPath, const ClassFileCont
 	if( !hz ) 
 	{
 		QMessageBox::warning(this, "", tr("Jar file not found."));
-		ui.lineEdit_JarFile->setFocus();
+		ui.comboBox_JarFile->setFocus();
 		return;
 	}
 
@@ -549,13 +1167,8 @@ void ClassSpaceChecker::openClassFile(const QString jarPath, const ClassFileCont
 		if( zr != ZR_OK )
 			break;
 
-		QString uri = qApp->applicationDirPath() + "\\jd\\jd-gui.exe";
+		QString uri = qApp->applicationDirPath() + "\\jd-gui\\jd-gui.exe";
 		uri = QDir::toNativeSeparators(uri);
-
-		std::wstring uriW = uri.toStdWString().c_str();
-		std::wstring paramW = L"\"";
-		paramW += output.toStdWString().c_str();
-		paramW += L"\"";
 
 		if(prevJdProcessId_ != 0)
 		{
@@ -568,21 +1181,7 @@ void ClassSpaceChecker::openClassFile(const QString jarPath, const ClassFileCont
 			prevJdProcessId_ = 0;
 		}
 
-		SHELLEXECUTEINFOW shellExInfo;
-		memset(&shellExInfo, 0, sizeof(SHELLEXECUTEINFO));
-		shellExInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-		shellExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-		shellExInfo.hwnd = NULL;
-		shellExInfo.lpVerb = L"open";
-		shellExInfo.lpFile = uriW.c_str();
-		shellExInfo.lpParameters = paramW.c_str();
-		shellExInfo.lpDirectory = NULL;
-		shellExInfo.nShow = SW_SHOWNORMAL;
-		shellExInfo.hInstApp = NULL;
-
-		ShellExecuteEx(&shellExInfo);
-
-		prevJdProcessId_ = GetProcessId(shellExInfo.hProcess); 
+		prevJdProcessId_ = runProgram(uri, "\"" + output + "\"", false);
 
 		ok = true;
 	} while( false );
@@ -598,4 +1197,54 @@ void ClassSpaceChecker::openClassFile(const QString jarPath, const ClassFileCont
 	{
 		QMessageBox::warning(this, "", tr("Can not open this class file."));
 	}
+}
+
+
+void ClassSpaceChecker::onJarFileCurrentIndexChanged(int index)
+{
+	if(initJarFileComboFlag_)
+		return;
+
+	QString presetId = ui.comboBox_JarFile->itemData(index).toString();
+	loadPreset(presetId);
+}
+
+
+void ClassSpaceChecker::onJarFileEditTextChanged(QString text)
+{
+	if(initJarFileComboFlag_)
+		return;
+
+	checkAndJarFilePreset(text);
+}
+
+void ClassSpaceChecker::onClickedDelete()
+{
+	if(ui.comboBox_JarFile->count() < 0 ||  ui.comboBox_JarFile->currentIndex() < 0)
+		return;
+
+	if(QMessageBox::question(this, "", "Are you sure you remove this preset?", QMessageBox::Yes|QMessageBox::No) != QMessageBox::Yes)
+		return;
+
+	QString presetId = ui.comboBox_JarFile->itemData( ui.comboBox_JarFile->currentIndex() ).toString();
+
+	gSettingManager.removeValue(presetId);
+
+	ui.comboBox_JarFile->removeItem(ui.comboBox_JarFile->currentIndex());
+
+	loadPresetList("");
+}
+
+
+void ClassSpaceChecker::onClickedIgnoreInnerClass()
+{
+	ui.tabWidget->setCurrentIndex(0);
+	searchClassByName(ui.checkBox_ByUncryptName->isChecked(), ui.checkBox_IgnoreInnerClass->isChecked(), ui.lineEdit_Search->text());
+}
+
+
+void ClassSpaceChecker::onClickedByUncryptName()
+{
+	ui.tabWidget->setCurrentIndex(0);
+	searchClassByName(ui.checkBox_ByUncryptName->isChecked(), ui.checkBox_IgnoreInnerClass->isChecked(), ui.lineEdit_Search->text());
 }

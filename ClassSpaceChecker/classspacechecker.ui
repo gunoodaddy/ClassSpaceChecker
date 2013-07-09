@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>548</width>
-    <height>511</height>
+    <width>1024</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,11 +22,27 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+       <layout class="QHBoxLayout" name="horizontalLayout_9">
         <item>
-         <widget class="QLineEdit" name="lineEdit_JarFile">
-          <property name="placeholderText">
-           <string>Jar File (Drag&amp;Drop supported)</string>
+         <widget class="QComboBox" name="comboBox_JarFile">
+          <property name="acceptDrops">
+           <bool>true</bool>
+          </property>
+          <property name="editable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_Delete">
+          <property name="maximumSize">
+           <size>
+            <width>40</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Del</string>
           </property>
          </widget>
         </item>
@@ -89,7 +105,7 @@
         <item>
          <widget class="QLineEdit" name="lineEdit_Search">
           <property name="placeholderText">
-           <string>Search Name (Regular Expression supported)</string>
+           <string>Search Class Name (Regular Expression supported)</string>
           </property>
          </widget>
         </item>
@@ -103,25 +119,87 @@
        </layout>
       </item>
       <item>
+       <widget class="QLineEdit" name="lineEdit_SearchText">
+        <property name="placeholderText">
+         <string>Search Text</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QGroupBox" name="groupBox">
         <property name="title">
          <string>Result</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
-          <widget class="QTableWidget" name="tableWidgetResult">
-           <property name="selectionMode">
-            <enum>QAbstractItemView::ExtendedSelection</enum>
+          <widget class="QCheckBox" name="checkBox_IgnoreInnerClass">
+           <property name="text">
+            <string>Ignore Inner Class</string>
            </property>
-           <property name="selectionBehavior">
-            <enum>QAbstractItemView::SelectRows</enum>
-           </property>
-           <property name="sortingEnabled">
-            <bool>true</bool>
-           </property>
-           <property name="columnCount">
+          </widget>
+         </item>
+         <item>
+          <widget class="QTabWidget" name="tabWidget">
+           <property name="currentIndex">
             <number>0</number>
            </property>
+           <widget class="QWidget" name="tab">
+            <attribute name="title">
+             <string>File Report</string>
+            </attribute>
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <item>
+              <widget class="QTableWidget" name="tableWidgetResult">
+               <property name="selectionMode">
+                <enum>QAbstractItemView::ExtendedSelection</enum>
+               </property>
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+               <property name="sortingEnabled">
+                <bool>true</bool>
+               </property>
+               <property name="columnCount">
+                <number>0</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tab_2">
+            <attribute name="title">
+             <string>Package Report</string>
+            </attribute>
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <item>
+              <widget class="QTableWidget" name="tableWidgetPackageReport">
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+               <property name="sortingEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tab_3">
+            <attribute name="title">
+             <string>Unique Class Report</string>
+            </attribute>
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <widget class="QTableWidget" name="tableWidgetUniqueClassReport">
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+               <property name="sortingEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </item>
          <item>
@@ -155,6 +233,7 @@
     </item>
    </layout>
   </widget>
+  <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
@@ -181,7 +260,7 @@
    <sender>lineEdit_Search</sender>
    <signal>textChanged(QString)</signal>
    <receiver>ClassSpaceCheckerClass</receiver>
-   <slot>onChangedSearchText(QString)</slot>
+   <slot>onChangedSearchClassName(QString)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>214</x>
@@ -289,6 +368,150 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>tableWidgetPackageReport</sender>
+   <signal>cellDoubleClicked(int,int)</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onPackageReportCellDoubleClicked(int,int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>272</x>
+     <y>310</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>273</x>
+     <y>255</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tableWidgetPackageReport</sender>
+   <signal>itemSelectionChanged()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onPackageReportItemSelectionChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>272</x>
+     <y>310</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>273</x>
+     <y>255</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tabWidget</sender>
+   <signal>currentChanged(int)</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onTabCurrentChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>273</x>
+     <y>301</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>273</x>
+     <y>255</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tableWidgetUniqueClassReport</sender>
+   <signal>itemSelectionChanged()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onUniqueClassReportItemSelectionChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>272</x>
+     <y>310</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>273</x>
+     <y>255</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBox_JarFile</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onJarFileCurrentIndexChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>257</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>273</x>
+     <y>255</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBox_JarFile</sender>
+   <signal>editTextChanged(QString)</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onJarFileEditTextChanged(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>257</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>273</x>
+     <y>255</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_Delete</sender>
+   <signal>clicked()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onClickedDelete()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>483</x>
+     <y>22</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>273</x>
+     <y>255</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_SearchText</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onChangedSearchText(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>273</x>
+     <y>154</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>273</x>
+     <y>255</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_IgnoreInnerClass</sender>
+   <signal>clicked()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onClickedIgnoreInnerClass()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>511</x>
+     <y>200</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>511</x>
+     <y>383</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>onCheckButtonClicked()</slot>
@@ -299,5 +522,14 @@
   <slot>onClickedByUncryptName()</slot>
   <slot>onResultCellDoubleClicked(int,int)</slot>
   <slot>onClickedExportCSV()</slot>
+  <slot>onPackageReportCellDoubleClicked(int,int)</slot>
+  <slot>onPackageReportItemSelectionChanged()</slot>
+  <slot>onTabCurrentChanged(int)</slot>
+  <slot>onUniqueClassReportItemSelectionChanged()</slot>
+  <slot>onJarFileCurrentIndexChanged(int)</slot>
+  <slot>onJarFileEditTextChanged(QString)</slot>
+  <slot>onClickedDelete()</slot>
+  <slot>onChangedSearchClassName(QString)</slot>
+  <slot>onClickedIgnoreInnerClass()</slot>
  </slots>
 </ui>
