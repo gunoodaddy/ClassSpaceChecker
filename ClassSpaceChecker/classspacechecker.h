@@ -6,7 +6,7 @@
 #include "ui_classspacechecker.h"
 #include <atlbase.h>
 
-#define VERSION_TEXT	"1.2.0"
+#define VERSION_TEXT	"1.2.2"
 
 #define AUTHOR_TEXT		"gunoodaddy"
 #define PROGRAM_TEXT	"Java Class Analysis"
@@ -78,16 +78,17 @@ public slots:
 	bool eventFilter(QObject *object, QEvent *evt);
 
 private:
+	int getIntFromTableItem(QTableWidget *table, int row, int column, int def = 0); 
 	void buildStatusBar();
 	void installStatusProgressBar(int maxValue);
 	void uninstallStatusProgressBar();
 	void setStatusProgressValue(int pos);
+	bool collectJavaClassInfo(const QString & classFile, ClassFileContext *ctx);
 	QByteArray decompileClassAndReadFile(const QString &classFilePath);
 	void checkAndJarFilePreset(const QString &jarPath);
 	void saveCurrentPreset();
 	void loadPreset(const QString &jarPath);
 	void loadPresetList(const QString &selectPresetId);
-	void changeResultHeader();
 	bool loadJarFile(const QString & jarPath);
 	bool loadMapFile(const QString & mapPath);
 	void collectData();
