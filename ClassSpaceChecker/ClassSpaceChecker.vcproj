@@ -42,9 +42,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;.\GeneratedFiles&quot;;&quot;.&quot;;&quot;$(QTDIR)\include&quot;;&quot;.\GeneratedFiles\$(ConfigurationName)&quot;;&quot;$(QTDIR)\include\QtCore&quot;;&quot;$(QTDIR)\include\QtGui&quot;"
-				PreprocessorDefinitions=",UNICODE,WIN32,QT_LARGEFILE_SUPPORT;QT_DLL;QT_NO_DEBUG,NDEBUG;QT_CORE_LIB;QT_GUI_LIB;HAVE_WINDOWS_H"
+				PreprocessorDefinitions=",UNICODE,WIN32,QT_DLL;QT_NO_DEBUG,NDEBUG;QT_CORE_LIB;QT_GUI_LIB;HAVE_WINDOWS_H"
 				RuntimeLibrary="2"
 				TreatWChar_tAsBuiltInType="false"
+				UsePrecompiledHeader="2"
 				DebugInformationFormat="0"
 			/>
 			<Tool
@@ -112,7 +113,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;.\GeneratedFiles&quot;;&quot;.&quot;;&quot;$(QTDIR)\include&quot;;&quot;.\GeneratedFiles\$(ConfigurationName)&quot;;&quot;$(QTDIR)\include\QtCore&quot;;&quot;$(QTDIR)\include\QtGui&quot;"
-				PreprocessorDefinitions=",UNICODE,WIN32,QT_LARGEFILE_SUPPORT;QT_DLL;QT_CORE_LIB;QT_GUI_LIB;HAVE_WINDOWS_H"
+				PreprocessorDefinitions=",UNICODE,WIN32,QT_DLL;QT_CORE_LIB;QT_GUI_LIB;HAVE_WINDOWS_H"
 				RuntimeLibrary="3"
 				TreatWChar_tAsBuiltInType="false"
 				DebugInformationFormat="3"
@@ -178,7 +179,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing classspacechecker.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DHAVE_WINDOWS_H -D_UNICODE  &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DHAVE_WINDOWS_H -D_UNICODE  &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-fStdAfx.h&quot; &quot;-f../../classspacechecker.h&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
@@ -189,11 +190,19 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing classspacechecker.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DHAVE_WINDOWS_H -D_UNICODE  &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DHAVE_WINDOWS_H -D_UNICODE  &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\GlobalEvent.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GlobalEvent.h"
+				>
 			</File>
 			<File
 				RelativePath=".\main.cpp"
@@ -216,7 +225,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing SettingManager.hpp..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DHAVE_WINDOWS_H -D_UNICODE  &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DHAVE_WINDOWS_H -D_UNICODE  &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-fStdAfx.h&quot; &quot;-f../../SettingManager.hpp&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
@@ -227,11 +236,57 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing SettingManager.hpp..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DHAVE_WINDOWS_H -D_UNICODE  &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot;&#x0D;&#x0A;"
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DHAVE_WINDOWS_H -D_UNICODE  &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot;&#x0D;&#x0A;"
 						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\sourceviewer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\sourceviewer.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing sourceviewer.h..."
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DHAVE_WINDOWS_H -D_UNICODE  &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-fStdAfx.h&quot; &quot;-f../../sourceviewer.h&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing sourceviewer.h..."
+						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DHAVE_WINDOWS_H -D_UNICODE &quot;-I.\GeneratedFiles&quot; &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\stdafx.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\stdafx.h"
+				>
 			</File>
 		</Filter>
 		<Filter
@@ -241,6 +296,32 @@
 			>
 			<File
 				RelativePath=".\classspacechecker.ui"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Uic&apos;ing $(InputFileName)..."
+						CommandLine="&quot;$(QTDIR)\bin\uic.exe&quot; -o &quot;.\GeneratedFiles\ui_$(InputName).h&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\uic.exe"
+						Outputs="&quot;.\GeneratedFiles\ui_$(InputName).h&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Uic&apos;ing $(InputFileName)..."
+						CommandLine="&quot;$(QTDIR)\bin\uic.exe&quot; -o &quot;.\GeneratedFiles\ui_$(InputName).h&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\uic.exe"
+						Outputs="&quot;.\GeneratedFiles\ui_$(InputName).h&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\sourceviewer.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -349,6 +430,10 @@
 				RelativePath=".\GeneratedFiles\ui_classspacechecker.h"
 				>
 			</File>
+			<File
+				RelativePath=".\GeneratedFiles\ui_sourceviewer.h"
+				>
+			</File>
 			<Filter
 				Name="Release"
 				Filter="cpp;moc"
@@ -368,6 +453,18 @@
 				</File>
 				<File
 					RelativePath=".\GeneratedFiles\Release\moc_SettingManager.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Release\moc_sourceviewer.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -408,6 +505,18 @@
 						/>
 					</FileConfiguration>
 				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Debug\moc_sourceviewer.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -420,6 +529,14 @@
 			<File
 				RelativePath=".\XZip\XUnzip.cpp"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\XZip\XUnzip.h"
@@ -428,6 +545,14 @@
 			<File
 				RelativePath=".\XZip\XZip.cpp"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\XZip\XZip.h"
@@ -445,6 +570,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -469,6 +595,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -493,6 +620,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -517,6 +645,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -541,6 +670,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -561,6 +691,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -585,6 +716,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -609,6 +741,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -629,6 +762,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -657,6 +791,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -681,6 +816,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -705,6 +841,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
 						CompileAs="2"
 					/>
 				</FileConfiguration>
@@ -725,6 +862,12 @@
 				RelativePath=".\jclass\types.h"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="Header Files"
+			Filter="h"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			>
 		</Filter>
 		<File
 			RelativePath=".\ClassSpaceChecker.rc"
@@ -754,7 +897,7 @@
 		/>
 		<Global
 			Name="QtVersion Win32"
-			Value="4.8.2"
+			Value="4.8.5"
 		/>
 		<Global
 			Name="RccDir"

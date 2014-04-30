@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "classspacechecker.h"
 #include <QtGui>
 #include <qt_windows.h>
@@ -8,7 +9,7 @@
 CSettingManager gSettingManager;
 
 ClassSpaceChecker::ClassSpaceChecker(QWidget *parent, Qt::WFlags flags)
-	: QMainWindow(parent, flags), prevJdProcessId_(0), initJarFileComboFlag_(false)
+	: QMainWindow(parent, flags), prevJdProcessId_(0), initJarFileComboFlag_(false), freezeSearchClassNameFlag_(false), srcViewer_(NULL)
 {
 	gSettingManager.setIniPath(qApp->applicationDirPath() + QDir::separator() + "data.ini");
 
@@ -19,12 +20,12 @@ ClassSpaceChecker::ClassSpaceChecker(QWidget *parent, Qt::WFlags flags)
 	ui.tableWidgetResult->setHorizontalHeaderLabels(QString("Class Name;File Size;Uncrypted Name;Method Count;Referenced Count;").split(";"));  
 	ui.tableWidgetResult->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
 
-	ui.tableWidgetPackageReport->setColumnCount(5);
-	ui.tableWidgetPackageReport->setHorizontalHeaderLabels(QString("Package Name;All Class Count;Unique Count;Diff Count;File Size").split(";"));  
+	ui.tableWidgetPackageReport->setColumnCount(6);
+	ui.tableWidgetPackageReport->setHorizontalHeaderLabels(QString("Package Name;All Class Count;Unique Count;Anonymous Count;Diff Count;File Size").split(";"));  
 	ui.tableWidgetPackageReport->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
 
-	ui.tableWidgetInnerClassReport->setColumnCount(3);
-	ui.tableWidgetInnerClassReport->setHorizontalHeaderLabels(QString("Class Name;Inner Class Count;File Size").split(";"));  
+	ui.tableWidgetInnerClassReport->setColumnCount(4);
+	ui.tableWidgetInnerClassReport->setHorizontalHeaderLabels(QString("Class Name;Inner Count;Anonymous Count;File Size").split(";"));  
 	ui.tableWidgetInnerClassReport->horizontalHeader()->setResizeMode( QHeaderView::Interactive );
 
 	ui.comboBox_JarFile->lineEdit()->setPlaceholderText("Jar File (Drag&Drop supported)");
@@ -52,7 +53,8 @@ ClassSpaceChecker::ClassSpaceChecker(QWidget *parent, Qt::WFlags flags)
 
 ClassSpaceChecker::~ClassSpaceChecker()
 {
-
+	if(srcViewer_ != NULL)
+		delete srcViewer_;
 }
 
 void ClassSpaceChecker::buildStatusBar()
@@ -282,7 +284,7 @@ void ClassSpaceChecker::onCheckButtonClicked()
 	{
 		collectData();
 
-		searchClassByName(ui.checkBox_ByUncryptName->isChecked(), ui.checkBox_IgnoreInnerClass->isChecked(), searchText);
+		search();
 		analysisUniqueClassReport();
 		analysisPackageReport();
 	}
@@ -440,46 +442,63 @@ bool ClassSpaceChecker::loadJarFile(const QString & jarPath)
 			GetZipItem( hz, i, &ze );
 
 			QString fileName = QString::fromStdWString(ze.name);
-			if(fileName.indexOf(".class", 0, Qt::CaseInsensitive) < 0)
-				continue;
+
+			bool javaFileFlag = false;
+			QString ext = ".class";
+			int pos = fileName.indexOf(ext, Qt::CaseInsensitive);
+			qDebug() << "#" << ext << "> " << fileName << ":" << pos << ":" << (fileName.length() - ext.length());
+			if(pos != (fileName.length() - ext.length()))
+			{
+				ext = ".java";
+				pos = fileName.indexOf(ext, Qt::CaseInsensitive);
+				qDebug() << "#" << ext << "> " << fileName << ":" << pos << ":" << (fileName.length() - ext.length());
+				if(pos != (fileName.length() - ext.length()))
+				{
+					continue;
+				}
+				javaFileFlag = true;
+			}
 
 			ClassFileContext *ctx = new ClassFileContext();
 			
+			ctx->javaFileFlag = javaFileFlag;
 			ctx->filePath = ctx->className = fileName;
 			ctx->fileSize = ze.unc_size;
 
 			ctx->className.replace("/", ".");
-			ctx->className.remove(".class");
+			ctx->className.remove(ext);
 
 			ctx->originalName = ctx->className;
 			
 			ctx->fullClassNameForKey = fileName;
-			ctx->fullClassNameForKey.remove(".class");
+			ctx->fullClassNameForKey.remove(ext);
 			ctx->fullClassNameForKey.replace("/", "_");
 
-			QString output = generateFileTempPath() + ctx->fullClassNameForKey + ".class";
+			QString output = generateFileTempPath() + ctx->fullClassNameForKey + ext;
 			zr = UnzipItem(hz, i, (void*)output.toStdWString().c_str(), 0, ZIP_FILENAME);
+			
+			ctx->referencedCount = -1;
+			ctx->methodCount = -1;
+
 			if( zr == ZR_OK ) 
 			{
-				ctx->decompiledBuffer = decompileClassAndReadFile(output);
-		
-				collectJavaClassInfo(output, ctx);
-			}
-			else 
-			{
-				ctx->referencedCount = -1;
-				ctx->methodCount = -1;
+				if(javaFileFlag)
+				{
+					ctx->decompiledBuffer = readFile(output);
+				}
+				else
+				{
+					ctx->decompiledBuffer = decompileClassAndReadFile(output);
+					collectJavaClassInfo(output, ctx);
+					
+					// this infomation is set in collectData() method
+					ctx->referencedCount = 0;
+					ctx->methodCount = 0;
+				}
 
-				//if(fileName.indexOf("aux.class") < 0)
-				//{
-				//	QMessageBox::warning(this, "", tr("Jar file is invalid. Cannot unzip file : ") + fileName);
-				//	removeAll();
-				//	return false;
-				//}
+				QFile f(output);
+				f.remove();
 			}
-
-			QFile f(output);
-			f.remove();
 
 			classList_.append(ctx);
 
@@ -579,15 +598,6 @@ void ClassSpaceChecker::collectData()
 			packageName = ctx->originalName.left(pos);
 		else
 			packageName = ctx->originalName;
-
-		QString uniqueClassName;
-		{
-			int pos = ctx->originalName.indexOf("$");
-			if(pos >= 0)
-				uniqueClassName = ctx->originalName.left(pos);
-			else
-				uniqueClassName = ctx->originalName;
-		}
 	
 		PackageContext* ctxPackage = NULL;
 		QMap<QString, PackageContext*>::iterator itPackage = packageMap_.find(packageName);
@@ -595,6 +605,7 @@ void ClassSpaceChecker::collectData()
 		{
 			ctxPackage = new PackageContext();
 			ctxPackage->classCount = 0;
+			ctxPackage->anonymousClassCount = 0;
 			ctxPackage->fileSize = 0;
 			packageMap_.insert(packageName, ctxPackage);
 		}
@@ -603,14 +614,29 @@ void ClassSpaceChecker::collectData()
 			ctxPackage = itPackage.value();
 		}
 
-		if(ctxPackage != NULL)
+		bool anonymousClassFlag = false;
+		QString uniqueClassName;
 		{
-			ctxPackage->packageName = packageName;
-			ctxPackage->fileSize += ctx->fileSize;
-			ctxPackage->classCount++;
-			ctxPackage->uniqueClassNameSet.insert(uniqueClassName);
+			int pos = ctx->originalName.indexOf("$");
+			if(pos >= 0) {
+				uniqueClassName = ctx->originalName.left(pos);
+				QString right = ctx->originalName.mid(pos + 1);
+				int anonymousId = right.toUInt();
+				if(anonymousId > 0) 
+				{
+					ctxPackage->anonymousClassCount++;
+					anonymousClassFlag = true;
+				}
+			}
+			else
+				uniqueClassName = ctx->originalName;
 		}
 
+		ctxPackage->packageName = packageName;
+		ctxPackage->fileSize += ctx->fileSize;
+		ctxPackage->classCount++;
+		ctxPackage->uniqueClassNameSet.insert(uniqueClassName);
+		
 		UniqueClassContext* ctxUniqueClass = NULL;
 		QMap<QString, UniqueClassContext*>::iterator itUniqueClass = uniqueClassMap_.find(uniqueClassName);
 		if(itUniqueClass == uniqueClassMap_.end())
@@ -625,12 +651,11 @@ void ClassSpaceChecker::collectData()
 			ctxUniqueClass = itUniqueClass.value();
 		}
 
-		if(ctxUniqueClass != NULL)
-		{
-			ctxUniqueClass->uniqueClassName = uniqueClassName;
-			ctxUniqueClass->fileSize += ctx->fileSize;
-			ctxUniqueClass->classCount++;
-		}
+		ctxUniqueClass->uniqueClassName = uniqueClassName;
+		ctxUniqueClass->fileSize += ctx->fileSize;
+		ctxUniqueClass->classCount++;
+		if(anonymousClassFlag)
+			ctxUniqueClass->anonymousCount++;
 
 		setStatusProgressValue(i + 1);
 	}
@@ -654,18 +679,30 @@ QByteArray ClassSpaceChecker::decompileClassAndReadFile(const QString &classFile
 	return f.readAll();
 }
 
-void ClassSpaceChecker::searchClassByName(bool useUncryptName, bool ignoreInnerClass, const QString & searchText) 
-{
-	searchClassInternal(searchText, true, useUncryptName, ignoreInnerClass);
+
+QByteArray ClassSpaceChecker::readFile(const QString &filePath) 
+{	
+	QFile f(filePath);
+	if(!f.open(QIODevice::ReadOnly))
+		return "";
+	return f.readAll();
 }
 
-void ClassSpaceChecker::searchClassByText(const QString & searchText) 
+void ClassSpaceChecker::search()
 {
-	searchClassInternal(searchText, false, false, false);
+	search(ui.lineEdit_Search->text(), 
+			ui.lineEdit_SearchText->text(), 
+			ui.checkBox_ByUncryptName->isChecked(), 
+			ui.checkBox_IgnoreInnerClass->isChecked(), 
+			ui.checkBox_OnlyAnonymousClass->isChecked(),
+			ui.checkBox_UseAsPackageName->isChecked());
 }
 
-
-void ClassSpaceChecker::searchClassInternal(const QString & searchText, bool classNameMode, bool useUncryptName, bool ignoreInnerClass) 
+void ClassSpaceChecker::search(const QString & searchName, const QString & searchText, 
+							bool useUncryptName, 
+							bool ignoreInnerClass, 
+							bool onlyAnonymousClass, 
+							bool useAsPackageName) 
 {
 	if(classList_.size() <= 0)
 		return;
@@ -683,29 +720,55 @@ void ClassSpaceChecker::searchClassInternal(const QString & searchText, bool cla
 		int col = 0;
 		const ClassFileContext* ctx = *it;
 
-		if(ignoreInnerClass && ctx->originalName.indexOf("$") > 0)
+		int markPos = ctx->originalName.indexOf("$");
+		if(ignoreInnerClass && markPos > 0)
 			continue;
 
-
-		if(searchText.isEmpty() == false)
+		if(onlyAnonymousClass) 
 		{
-			if(classNameMode)
+			QString right = ctx->originalName.mid(markPos + 1);
+			int anonymousId = right.toUInt();
+			if(anonymousId <= 0) 
+				continue;
+		}
+
+		if(useAsPackageName)
+		{
+			int posTemp = ctx->originalName.indexOf(searchName);
+			if(posTemp < 0)
+				continue;
+			posTemp = ctx->originalName.indexOf(".", posTemp + searchName.length() + 1);
+			if(posTemp > 0)
+				continue;
+		}
+		else 
+		{
+			if(searchName.isEmpty() == false)
 			{
 				if(useUncryptName)
 				{
-					if(ctx->originalName.contains(QRegExp(searchText, Qt::CaseInsensitive)) == false)
+					if(ctx->originalName.contains(QRegExp(searchName, Qt::CaseInsensitive)) == false)
 						continue;
 				}
 				else
 				{
-					if(ctx->className.contains(QRegExp(searchText, Qt::CaseInsensitive)) == false)
+					if(ctx->className.contains(QRegExp(searchName, Qt::CaseInsensitive)) == false)
 						continue;
 				}
+			}
+		}
+
+		if(searchText.isEmpty() == false)
+		{
+			if(ctx->javaFileFlag) 
+			{
+				QString decompiledBufferStr = ctx->decompiledBuffer;
+				if(decompiledBufferStr.contains(QRegExp(searchText, Qt::CaseSensitive)) == false)
+					continue;
 			}
 			else
 			{
 				if(ctx->decompiledBuffer.contains(searchText.toStdString().c_str()) == false)
-				//if(ctx->decompiledBuffer.contains(QRegExp(searchText, Qt::CaseInsensitive)) == false)
 					continue;
 			}
 		}
@@ -724,9 +787,12 @@ void ClassSpaceChecker::searchClassInternal(const QString & searchText, bool cla
 		itemSize->setFlags(itemSize->flags() & ~Qt::ItemIsEditable);
 		ui.tableWidgetResult->setItem(rowCount, col++, itemSize);
 
-		QTableWidgetItem *itemCrypt = new QTableWidgetItem(ctx->originalName);
-		itemCrypt->setFlags(itemCrypt->flags() & ~Qt::ItemIsEditable);
-		ui.tableWidgetResult->setItem(rowCount, col++, itemCrypt);
+		QString uncryptName = ctx->originalName;
+		if(currentMapPath_.isEmpty())
+			uncryptName = "-";
+		QTableWidgetItem *itemUncrypt = new QTableWidgetItem(uncryptName);
+		itemUncrypt->setFlags(itemUncrypt->flags() & ~Qt::ItemIsEditable);
+		ui.tableWidgetResult->setItem(rowCount, col++, itemUncrypt);
 		
 		QTableWidgetItem *itemMethodCount = new QTableWidgetItem();
 		itemMethodCount->setData(Qt::DisplayRole, ctx->methodCount);
@@ -789,6 +855,10 @@ void ClassSpaceChecker::analysisUniqueClassReport()
 		itemClassCount->setData(Qt::DisplayRole, ctx->classCount - 1);
 		itemClassCount->setFlags(itemClassCount->flags() & ~Qt::ItemIsEditable);
 
+		QTableWidgetItem *itemAnonymousClassCount = new QTableWidgetItem();
+		itemAnonymousClassCount->setData(Qt::DisplayRole, ctx->anonymousCount);
+		itemAnonymousClassCount->setFlags(itemAnonymousClassCount->flags() & ~Qt::ItemIsEditable);
+
 		QTableWidgetItem *itemSize = new QTableWidgetItem();
 		itemSize->setData(Qt::DisplayRole, ctx->fileSize);
 		itemSize->setFlags(itemSize->flags() & ~Qt::ItemIsEditable);
@@ -796,7 +866,8 @@ void ClassSpaceChecker::analysisUniqueClassReport()
 		ui.tableWidgetInnerClassReport->insertRow(rowCount);
 		ui.tableWidgetInnerClassReport->setItem(rowCount, 0, itemName);
 		ui.tableWidgetInnerClassReport->setItem(rowCount, 1, itemClassCount);
-		ui.tableWidgetInnerClassReport->setItem(rowCount, 2, itemSize);
+		ui.tableWidgetInnerClassReport->setItem(rowCount, 2, itemAnonymousClassCount);
+		ui.tableWidgetInnerClassReport->setItem(rowCount, 3, itemSize);
 
 		rowCount++;
 	}
@@ -833,6 +904,10 @@ void ClassSpaceChecker::analysisPackageReport()
 		itemUniqueClassCount->setData(Qt::DisplayRole, ctx->uniqueClassNameSet.size());
 		itemUniqueClassCount->setFlags(itemUniqueClassCount->flags() & ~Qt::ItemIsEditable);
 
+		QTableWidgetItem *itemAnonymousCount = new QTableWidgetItem();
+		itemAnonymousCount->setData(Qt::DisplayRole, ctx->anonymousClassCount);
+		itemAnonymousCount->setFlags(itemAnonymousCount->flags() & ~Qt::ItemIsEditable);
+
 		QTableWidgetItem *itemDiffCount = new QTableWidgetItem();
 		itemDiffCount->setData(Qt::DisplayRole, (ctx->classCount - ctx->uniqueClassNameSet.size()));
 		itemDiffCount->setFlags(itemDiffCount->flags() & ~Qt::ItemIsEditable);
@@ -845,8 +920,9 @@ void ClassSpaceChecker::analysisPackageReport()
 		ui.tableWidgetPackageReport->setItem(rowCount, 0, itemOriginal);
 		ui.tableWidgetPackageReport->setItem(rowCount, 1, itemClassCount);
 		ui.tableWidgetPackageReport->setItem(rowCount, 2, itemUniqueClassCount);
-		ui.tableWidgetPackageReport->setItem(rowCount, 3, itemDiffCount);
-		ui.tableWidgetPackageReport->setItem(rowCount, 4, itemSize);
+		ui.tableWidgetPackageReport->setItem(rowCount, 3, itemAnonymousCount);
+		ui.tableWidgetPackageReport->setItem(rowCount, 4, itemDiffCount);
+		ui.tableWidgetPackageReport->setItem(rowCount, 5, itemSize);
 
 		rowCount++;
 	}
@@ -901,16 +977,23 @@ void ClassSpaceChecker::writeToCSVFile(const QTableWidget *tableWidget, const QS
 	outputFile.close();
 }
 
+
 void ClassSpaceChecker::onChangedSearchClassName(QString text)
 {
+	if(freezeSearchClassNameFlag_)
+		return;
+
 	ui.tabWidget->setCurrentIndex(0);
-	searchClassByName(ui.checkBox_ByUncryptName->isChecked(), ui.checkBox_IgnoreInnerClass->isChecked(), text);
+	
+	search();
 }
+
 
 void ClassSpaceChecker::onChangedSearchText(QString text)
 {
 	ui.tabWidget->setCurrentIndex(0);
-	searchClassByText(text);
+	
+	search();
 }
 
 
@@ -1016,6 +1099,7 @@ void ClassSpaceChecker::onPackageReportItemSelectionChanged()
 	QSet<int> set;
 	int classCount = 0;
 	int uniqueClassCount = 0;
+	int diffClassCount = 0;
 	int totalSize = 0;
 	for(int i = 0; i < items.size(); i++) 
 	{
@@ -1034,7 +1118,12 @@ void ClassSpaceChecker::onPackageReportItemSelectionChanged()
 			continue;
 		uniqueClassCount += itemUniqueClassCount->data(Qt::DisplayRole).toInt();
 
-		QTableWidgetItem *itemFileSize = ui.tableWidgetPackageReport->item(item->row(), 4);
+		QTableWidgetItem *itemDiffClassCount = ui.tableWidgetPackageReport->item(item->row(), 3);
+		if(itemDiffClassCount == NULL)
+			continue;
+		diffClassCount += itemDiffClassCount->data(Qt::DisplayRole).toInt();
+
+		QTableWidgetItem *itemFileSize = ui.tableWidgetPackageReport->item(item->row(), 5);
 		if(itemFileSize == NULL)
 			continue;
 		totalSize += itemFileSize->data(Qt::DisplayRole).toInt();
@@ -1043,10 +1132,13 @@ void ClassSpaceChecker::onPackageReportItemSelectionChanged()
 
 
 	QString resultStr;
+	resultStr += "All Class Count : ";
 	resultStr += QString::number(classCount);
-	resultStr += " class count, ";
+	resultStr += ", Unique Class Count : ";
 	resultStr += QString::number(uniqueClassCount);
-	resultStr += " unique class count, ";
+	resultStr += ", Diff Class Count : ";
+	resultStr += QString::number(diffClassCount);
+	resultStr += ", File Size : ";
 	resultStr += numberDot(QString::number(totalSize));
 	resultStr += " bytes";
 
@@ -1064,6 +1156,7 @@ void ClassSpaceChecker::onInnerClassReportItemSelectionChanged()
 
 	QSet<int> set;
 	int classCount = 0;
+	int anonymousClassCount = 0;
 	int uniqueClassCount = 0;
 	int totalSize = 0;
 	for(int i = 0; i < items.size(); i++) 
@@ -1078,19 +1171,26 @@ void ClassSpaceChecker::onInnerClassReportItemSelectionChanged()
 			continue;
 		classCount += itemClassCount->data(Qt::DisplayRole).toInt();
 
-		QTableWidgetItem *itemFileSize = ui.tableWidgetInnerClassReport->item(item->row(), 2);
+		QTableWidgetItem *itemAnonymousCount = ui.tableWidgetInnerClassReport->item(item->row(), 2);
+		if(itemAnonymousCount == NULL)
+			continue;
+		anonymousClassCount += itemAnonymousCount->data(Qt::DisplayRole).toInt();
+
+		QTableWidgetItem *itemFileSize = ui.tableWidgetInnerClassReport->item(item->row(), 3);
 		if(itemFileSize == NULL)
 			continue;
 		totalSize += itemFileSize->data(Qt::DisplayRole).toInt();
 		set.insert(row);
 	}
 
-
 	QString resultStr;
+	resultStr += "Selected Count : ";
 	resultStr += QString::number(set.size());
-	resultStr += " selected, ";
+	resultStr += ", Inner Class Count : ";
 	resultStr += QString::number(classCount);
-	resultStr += " inner class count, ";
+	resultStr += ", Anonymous Class Count : ";
+	resultStr += QString::number(anonymousClassCount);
+	resultStr += ", File Size : ";
 	resultStr += numberDot(QString::number(totalSize));
 	resultStr += " bytes";
 
@@ -1099,7 +1199,19 @@ void ClassSpaceChecker::onInnerClassReportItemSelectionChanged()
 
 void ClassSpaceChecker::onPackageReportCellDoubleClicked(int row, int column)
 {
-	
+	QTableWidgetItem *item = ui.tableWidgetPackageReport->item(row, 0);
+	if(item == NULL)
+		return;
+
+	QString packageName = item->text();
+
+	freezeSearchClassNameFlag_ = true;
+	ui.lineEdit_Search->setText(packageName);
+	freezeSearchClassNameFlag_ = false;
+
+	ui.checkBox_UseAsPackageName->setChecked(true);
+	search(packageName, ui.lineEdit_SearchText->text(), ui.checkBox_ByUncryptName->isChecked(), ui.checkBox_IgnoreInnerClass->isChecked(), ui.checkBox_OnlyAnonymousClass->isChecked(), ui.checkBox_UseAsPackageName->isChecked());
+	ui.tabWidget->setCurrentIndex(0);
 }
 
 void ClassSpaceChecker::onResultCellDoubleClicked(int row, int column)
@@ -1112,7 +1224,14 @@ void ClassSpaceChecker::onResultCellDoubleClicked(int row, int column)
 	if(ctx == NULL)
 		return;
 
-	openClassFile(currentJarPath_, ctx);
+	if(ctx->javaFileFlag)
+	{
+		openJavaFile(currentJarPath_, ctx);
+	}
+	else
+	{
+		openClassFile(currentJarPath_, ctx);
+	}
 }
 
 void ClassSpaceChecker::onTabCurrentChanged(int index)
@@ -1151,8 +1270,10 @@ unsigned long ClassSpaceChecker::runProgram(const QString &theUri, const QString
 	return processId;
 }
 
-void ClassSpaceChecker::openClassFile(const QString jarPath, const ClassFileContext *ctx)
+
+QString ClassSpaceChecker::unzipFile(const QString &jarPath, const ClassFileContext *ctx)
 {
+	QString output;
 	bool ok = false;
 
 #if defined(Q_WS_WIN)
@@ -1163,7 +1284,7 @@ void ClassSpaceChecker::openClassFile(const QString jarPath, const ClassFileCont
 	{
 		QMessageBox::warning(this, "", tr("Jar file not found."));
 		ui.comboBox_JarFile->setFocus();
-		return;
+		return "";
 	}
 
 	do{
@@ -1178,26 +1299,10 @@ void ClassSpaceChecker::openClassFile(const QString jarPath, const ClassFileCont
 			break;
 
 		//QString output = generateFileTempPath() + "Temp.class";
-		QString output = generateFileTempPath() + ctx->fullClassNameForKey + ".class";
+		output = generateFileTempPath() + ctx->fullClassNameForKey + (ctx->javaFileFlag ? ".java" : ".class");
 		zr = UnzipItem(hz, i, (void*)output.toStdWString().c_str(), 0, ZIP_FILENAME);
 		if( zr != ZR_OK )
 			break;
-
-		QString uri = qApp->applicationDirPath() + "\\jd-gui\\jd-gui.exe";
-		uri = QDir::toNativeSeparators(uri);
-
-		if(prevJdProcessId_ != 0)
-		{
-			HANDLE h = OpenProcess(PROCESS_TERMINATE, false, prevJdProcessId_);
-			if(h != NULL)
-			{
-				TerminateProcess(h, 1);
-				CloseHandle(h);
-			}
-			prevJdProcessId_ = 0;
-		}
-
-		prevJdProcessId_ = runProgram(uri, "\"" + output + "\"", false);
 
 		ok = true;
 	} while( false );
@@ -1209,10 +1314,69 @@ void ClassSpaceChecker::openClassFile(const QString jarPath, const ClassFileCont
 	return false;
 #endif
 
-	if(ok == false)
+	if(ok)
+		return output;
+
+	return "";
+}
+
+void ClassSpaceChecker::openJavaFile(const QString &jarPath, const ClassFileContext *ctx)
+{
+	QString output = unzipFile(jarPath, ctx);
+	if(output.isEmpty())
+	{
+		QMessageBox::warning(this, "", tr("Can not open this java file."));
+	}
+
+	if(prevJdProcessId_ != 0)
+	{
+		HANDLE h = OpenProcess(PROCESS_TERMINATE, false, prevJdProcessId_);
+		if(h != NULL)
+		{
+			TerminateProcess(h, 1);
+			CloseHandle(h);
+		}
+		prevJdProcessId_ = 0;
+	}
+
+	if(srcViewer_ == NULL)
+		srcViewer_ = new SourceViewer(this);
+	srcViewer_->setSourceText(ctx->fullClassNameForKey, getFileName(ctx->filePath), ui.lineEdit_SearchText->text(), ctx->decompiledBuffer);
+	srcViewer_->show();
+
+	//QString uri = "wordpad";
+	//uri = QDir::toNativeSeparators(uri);
+
+	//prevJdProcessId_ = runProgram(uri, "\"" + output + "\"", false);
+
+	//prevJdProcessId_ = runProgram(output, "", false);
+	return;
+}
+
+
+void ClassSpaceChecker::openClassFile(const QString &jarPath, const ClassFileContext *ctx)
+{
+	QString output = unzipFile(jarPath, ctx);
+	if(output.isEmpty())
 	{
 		QMessageBox::warning(this, "", tr("Can not open this class file."));
 	}
+
+	if(prevJdProcessId_ != 0)
+	{
+		HANDLE h = OpenProcess(PROCESS_TERMINATE, false, prevJdProcessId_);
+		if(h != NULL)
+		{
+			TerminateProcess(h, 1);
+			CloseHandle(h);
+		}
+		prevJdProcessId_ = 0;
+	}
+
+	QString uri = qApp->applicationDirPath() + "\\jd-gui\\jd-gui.exe";
+	uri = QDir::toNativeSeparators(uri);
+
+	prevJdProcessId_ = runProgram(uri, "\"" + output + "\"", false);
 }
 
 
@@ -1250,17 +1414,33 @@ void ClassSpaceChecker::onClickedDelete()
 
 	loadPresetList("");
 }
-
+	
+void ClassSpaceChecker::onClickedOnlyAnonymousClass() 
+{
+	ui.tabWidget->setCurrentIndex(0);
+	search();
+}
 
 void ClassSpaceChecker::onClickedIgnoreInnerClass()
 {
 	ui.tabWidget->setCurrentIndex(0);
-	searchClassByName(ui.checkBox_ByUncryptName->isChecked(), ui.checkBox_IgnoreInnerClass->isChecked(), ui.lineEdit_Search->text());
+	search();
 }
 
 
 void ClassSpaceChecker::onClickedByUncryptName()
 {
 	ui.tabWidget->setCurrentIndex(0);
-	searchClassByName(ui.checkBox_ByUncryptName->isChecked(), ui.checkBox_IgnoreInnerClass->isChecked(), ui.lineEdit_Search->text());
+	search();
+}
+
+void ClassSpaceChecker::onClickedUseAsPackageName()
+{
+	ui.tabWidget->setCurrentIndex(0);
+	search();
+}
+
+void ClassSpaceChecker::onClickedClearSearchClass()
+{
+	ui.lineEdit_Search->setText("");
 }

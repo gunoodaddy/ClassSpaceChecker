@@ -5,8 +5,9 @@
 #include <QtGui>
 #include "ui_classspacechecker.h"
 #include <atlbase.h>
+#include "sourceviewer.h"
 
-#define VERSION_TEXT	"1.2.2"
+#define VERSION_TEXT	"1.2.5"
 
 #define AUTHOR_TEXT		"gunoodaddy"
 #define PROGRAM_TEXT	"Java Class Analysis"
@@ -26,6 +27,7 @@ public:
 	long fileSize;
 	int methodCount;
 	int referencedCount;
+	bool javaFileFlag;
 	QByteArray decompiledBuffer;
 	QSet<QString> classReferencedList;
 };
@@ -34,6 +36,7 @@ class UniqueClassContext
 {
 public:
 	int classCount;
+	int anonymousCount;
 	long fileSize;
 	QString uniqueClassName;
 };
@@ -43,6 +46,7 @@ class PackageContext
 public:
 	int classCount;
 	int uniqueClassCount;
+	int anonymousClassCount;
 	long fileSize;
 	QSet<QString> uniqueClassNameSet;
 	QString packageName;
@@ -60,6 +64,7 @@ public:
 public slots:
 	void onJarFileCurrentIndexChanged(int index);
 	void onClickedIgnoreInnerClass();
+	void onClickedOnlyAnonymousClass();
 	void onClickedExportCSV();
 	void onClickedJarFile();
 	void onClickedMapFile();
@@ -75,6 +80,8 @@ public slots:
 	void onTabCurrentChanged(int index);
 	void onJarFileEditTextChanged(QString text);
 	void onClickedDelete();
+	void onClickedClearSearchClass();
+	void onClickedUseAsPackageName();
 	bool eventFilter(QObject *object, QEvent *evt);
 
 private:
@@ -85,6 +92,7 @@ private:
 	void setStatusProgressValue(int pos);
 	bool collectJavaClassInfo(const QString & classFile, ClassFileContext *ctx);
 	QByteArray decompileClassAndReadFile(const QString &classFilePath);
+	QByteArray readFile(const QString &filePath);
 	void checkAndJarFilePreset(const QString &jarPath);
 	void saveCurrentPreset();
 	void loadPreset(const QString &jarPath);
@@ -92,13 +100,14 @@ private:
 	bool loadJarFile(const QString & jarPath);
 	bool loadMapFile(const QString & mapPath);
 	void collectData();
-	void searchClassInternal(const QString & searchText, bool classNameMode, bool useUncryptName, bool ignoreInnerClass);
-	void searchClassByName(bool useUncryptName, bool ignoreInnerClass, const QString & searchText);
-	void searchClassByText(const QString & searchText);
+	void search();
+	void search(const QString & searchName, const QString & searchText, bool useUncryptName, bool ignoreInnerClass, bool onlyAnonymousClass, bool useAsPackageName);
 	void analysisPackageReport();
 	void analysisUniqueClassReport();
 	void removeAll();
-	void openClassFile(const QString jarPath, const ClassFileContext *ctx);
+	QString unzipFile(const QString &jarPath, const ClassFileContext *ctx);
+	void openJavaFile(const QString &jarPath, const ClassFileContext *ctx);
+	void openClassFile(const QString &jarPath, const ClassFileContext *ctx);
 	void writeToCSVFile(const QTableWidget *tableWidget, const QString & outputPath);
 	unsigned long runProgram(const QString &theUri, const QString &param, bool silentMode = false, bool waitExit = false);
 
@@ -125,6 +134,12 @@ private:
 		if ( !dir.exists() )
 			dir.mkpath( res );
 		return QDir::toNativeSeparators(res);
+	}
+
+	QString getFileName(const QString &path)
+	{
+		QFileInfo p(path);
+		return p.fileName();;
 	}
 
 	QString numberDot(const QString & src)
@@ -165,6 +180,8 @@ private:
 	unsigned long prevJdProcessId_;
 	bool initJarFileComboFlag_;
 	QProgressBar *progressBar_;
+	SourceViewer *srcViewer_;
+	bool freezeSearchClassNameFlag_;
 };
 
 #endif // CLASSSPACECHECKER_H

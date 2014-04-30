@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SourceViewer</class>
+ <widget class="QWidget" name="SourceViewer">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>870</width>
+    <height>666</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>sourceviewer</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLineEdit" name="searchText"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="nextBtn">
+         <property name="text">
+          <string>Next (F4)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="prevBtn">
+         <property name="text">
+          <string>Prev (F3)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="caseSensitiveCheck">
+         <property name="text">
+          <string>Case Sensitive</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="currentIndex">
+        <number>-1</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>nextBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>SourceViewer</receiver>
+   <slot>onClickedSearchNext()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>494</x>
+     <y>22</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>328</x>
+     <y>240</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>prevBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>SourceViewer</receiver>
+   <slot>onClickedSearchPrev()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>413</x>
+     <y>22</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>328</x>
+     <y>240</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>searchText</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>SourceViewer</receiver>
+   <slot>onChangedSearchText(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>21</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>328</x>
+     <y>240</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>caseSensitiveCheck</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>SourceViewer</receiver>
+   <slot>onClickedCaseSensitive(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>591</x>
+     <y>21</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>328</x>
+     <y>240</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>onClickedSearchPrev()</slot>
+  <slot>onClickedSearchNext()</slot>
+  <slot>onClickedCaseSensitive(bool)</slot>
+  <slot>onChangedSearchText(QString)</slot>
+ </slots>
+</ui>

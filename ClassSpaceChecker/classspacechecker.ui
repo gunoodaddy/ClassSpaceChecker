@@ -110,6 +110,34 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="pushButton_ClearSearchClass">
+          <property name="text">
+           <string>Clear</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBox_IgnoreInnerClass">
+          <property name="text">
+           <string>Ignore Inner Class</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBox_OnlyAnonymousClass">
+          <property name="text">
+           <string>Only Anonymous Class</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBox_UseAsPackageName">
+          <property name="text">
+           <string>Package Name</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QCheckBox" name="checkBox_ByUncryptName">
           <property name="text">
            <string>By Uncrypt Name</string>
@@ -132,11 +160,7 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
-          <widget class="QCheckBox" name="checkBox_IgnoreInnerClass">
-           <property name="text">
-            <string>Ignore Inner Class</string>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout"/>
          </item>
          <item>
           <widget class="QTabWidget" name="tabWidget">
@@ -512,6 +536,54 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>checkBox_OnlyAnonymousClass</sender>
+   <signal>clicked()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onClickedOnlyAnonymousClass()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>232</x>
+     <y>203</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>511</x>
+     <y>383</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_ClearSearchClass</sender>
+   <signal>clicked()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onClickedClearSearchClass()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>846</x>
+     <y>129</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>511</x>
+     <y>383</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_UseAsPackageName</sender>
+   <signal>clicked()</signal>
+   <receiver>ClassSpaceCheckerClass</receiver>
+   <slot>onClickedUseAsPackageName()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>828</x>
+     <y>128</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>511</x>
+     <y>383</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>onCheckButtonClicked()</slot>
@@ -531,5 +603,8 @@
   <slot>onClickedDelete()</slot>
   <slot>onChangedSearchClassName(QString)</slot>
   <slot>onClickedIgnoreInnerClass()</slot>
+  <slot>onClickedOnlyAnonymousClass()</slot>
+  <slot>onClickedClearSearchClass()</slot>
+  <slot>onClickedUseAsPackageName()</slot>
  </slots>
 </ui>
